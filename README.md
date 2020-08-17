@@ -1,6 +1,6 @@
 # meguinauge-2
 
-**MEG**asquirt + ard**UIN**o + g**AUGE** = meguinauge. Pronounced "meh-gween-edge." Or however you want. 20x4 character LCD gauge for [MegaSquirt](http://megasquirt.info/).
+**MEG**asquirt + ard**UIN**o + g**AUGE** = meguinauge. Pronounced "meh-gween-edge." Or however you want. 16x2 character LCD gauge for [MegaSquirt](http://megasquirt.info/).
 
 ## Overview
 * Provides a vehicle gauge that can display 1 or 2 different engine parameters at a time.
