@@ -13,7 +13,7 @@
 * 1 pushbutton
 
 ## User Interface
-Engine parameters will be displayed on a 16x2 LCD display. Each engine parameter will be shown with a short code and a number. For example, "CLT 203.5" means the coolant temperature is 203.5 degrees. The short codes will be familiar to MegaSquirt users. When 2 or 4 gauges are shown on the display, a bar graph will also be shown for each engine parameter.
+Engine parameters will be displayed on a 16x2 LCD display. Each engine parameter will be shown with a short code and a number. For example, "CLT 203.5" means the coolant temperature is 203.5 degrees. The short codes will be familiar to MegaSquirt users. A bar graph will also be shown for each engine parameter.
 
 The pushbutton will be used to cycle through the different gauge displays and modes.
 
