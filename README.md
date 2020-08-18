@@ -1,6 +1,6 @@
-# meguinauge
+# Meguinauge
 
-**MEG**asquirt + ard**UIN**o + g**AUGE** = meguinauge. Pronounced "meh-gween-edge." Or however you want. 16x2 character LCD gauge for [MegaSquirt](http://megasquirt.info/). This project is based on my meguinauge project, which will no longer be actively developed. This newer version uses a smaller display, one button instead of two, and incorporates features from my carfuino project.
+**MEG**asquirt + ard**UIN**o + g**AUGE** = Meguinauge. Pronounced "meh-gween-edge." Or however you want. 16x2 character LCD gauge for [MegaSquirt](http://megasquirt.info/). This project is based on my previous meguinauge project, which will no longer be actively developed. This newer version uses a smaller display, one button instead of two, and incorporates features from my carfuino project.
 
 ## Overview
 * Provides a vehicle gauge that can display 1 or 2 different engine parameters at a time.
