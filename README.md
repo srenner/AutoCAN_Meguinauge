@@ -1,4 +1,4 @@
-# meguinauge-2
+# meguinauge
 
 **MEG**asquirt + ard**UIN**o + g**AUGE** = meguinauge. Pronounced "meh-gween-edge." Or however you want. 16x2 character LCD gauge for [MegaSquirt](http://megasquirt.info/). This project is based on my meguinauge project, which will no longer be actively developed. This newer version uses a smaller display, one button instead of two, and incorporates features from my carfuino project.
 
