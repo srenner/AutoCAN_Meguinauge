@@ -17,7 +17,7 @@ Engine parameters will be displayed on a 16x2 LCD display. Each engine parameter
 
 The pushbutton will be used to cycle through the different gauge displays and modes.
 
-A red LED is illuminated when one or more of the engine parameters goes outside of its predefined range. When all engine parameters return to their normal range, the LED will stay illuminated for a few more moments. The amount of time the LED remains illuminated depends on the amount of time a parameter was out of range.
+The LED is illuminated when one or more of the engine parameters goes outside of its predefined range. When all engine parameters return to their normal range, the LED will stay illuminated for a few more moments. The amount of time the LED remains illuminated depends on the amount of time a parameter was out of range.
 
 ## MegaSquirt details
 * Tested using MegaSquirt-3 with firmware version 1.5.0.
