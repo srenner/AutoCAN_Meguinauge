@@ -12,6 +12,9 @@
 * 1 LED
 * 1 pushbutton
 
+## External Libraries
+* [AltSoftSerial](https://github.com/Atlantis-Specialist-Technologies/AltSoftSerial) - Make sure to use the version modified by AST to work with the AST-CAN485 dev board.
+
 ## User Interface
 Engine parameters will be displayed on a 16x2 LCD display. Each engine parameter will be shown with a short code and a number. For example, "CLT 203.5" means the coolant temperature is 203.5 degrees. The short codes will be familiar to MegaSquirt users. A bar graph will also be shown for each engine parameter.
 
