@@ -36,11 +36,13 @@ Display runtime and distance traveled on startup if the vehicle is already warme
 | D | I | S | T | A | N | C | E |   |   | 0 | 1 | 7 |   | M | I |
 
 ### Single Gauge View
+The engine parameter short code on the top left. Value on the top right. Entire second row is a bar graph.
 | A | F | R |   |   |   |   |   |   |   |   |   | 1 | 4 | . | 7 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | █ | █ | █ | █ | █ | █ | █ | █ |   |   |   |   |   |   |   |   |
 
 ### Double Gauge View
+Each row contains the engine parameter short code, value, and half-width bar graph.
 | A | F | R |   | 1 | 3 | . | 2 | █ | █ | █ | █ |   |   |   |   |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | T | G | T |   | 1 | 4 | . | 7 | █ | █ | █ |   |   |   |   |   |
