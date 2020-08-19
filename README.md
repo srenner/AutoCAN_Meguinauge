@@ -23,14 +23,14 @@ The pushbutton will be used to cycle through the different gauge displays and mo
 The LED is illuminated when one or more of the engine parameters goes outside of its predefined range. When all engine parameters return to their normal range, the LED will stay illuminated for a few more moments. The amount of time the LED remains illuminated depends on the amount of time a parameter was out of range.
 
 ### Default Warmup Display
-Display coolant temp, runtime, and warmup graph on startup if the engine is cold. The graph range starts at the temp the engine started at, and is full at 160 degrees.
+Display coolant temp, runtime, and warmup graph on startup if the engine is cold. The graph range starts at the temp the engine started at, and is full at 160 degrees. This view becomes unavailable once the warmup temperature is reached.
 | W | A | R | M | U | P |   | 1 | 0 | 4 |   | 1 | 2 | : | 0 | 6 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | █ | █ | █ | █ | █ | █ | █ | █ |   |   |   |   |   |   |   |   |
 
 
 ### Default Display
-Display runtime and distance traveled on startup if the vehicle is already warmed up
+Display runtime and distance traveled on startup if the vehicle is already warmed up. If the vehicle started with the warmup display, automatically switch to this one once warm.
 | R | U | N | T | I | M | E |   |   |   |   | 1 | 2 | : | 0 | 6 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | D | I | S | T | A | N | C | E |   |   | 0 | 1 | 7 |   | M | I |
