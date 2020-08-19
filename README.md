@@ -43,9 +43,9 @@ The engine parameter short code on the top left. Value on the top right. Entire 
 
 ### Double Gauge View
 Each row contains the engine parameter short code, value, and half-width bar graph.
-| A | F | R |   | 1 | 3 | . | 2 | █ | █ | █ | █ |   |   |   |   |
+| A | F | R |   | 1 | 3 | . | 2 | █ | █ | █ |   |   |   |   |   |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| T | G | T |   | 1 | 4 | . | 7 | █ | █ | █ |   |   |   |   |   |
+| T | G | T |   | 1 | 4 | . | 7 | █ | █ | █ | █ |   |   |   |   |
 
 ## MegaSquirt details
 * Tested using MegaSquirt-3 with firmware version 1.5.0.
