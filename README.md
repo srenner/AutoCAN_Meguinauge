@@ -35,6 +35,12 @@ Display runtime and distance traveled on startup if the vehicle is already warme
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | D | I | S | T | A | N | C | E |   |   | 0 | 1 | 7 |   | M | I |
 
+### Single Gauge View
+| A | F | R |   |   |   |   |   |   |   |   |   | 1 | 4 | . | 7 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| █ | █ | █ | █ | █ | █ | █ | █ |   |   |   |   |   |   |   |   |
+
+
 ## MegaSquirt details
 * Tested using MegaSquirt-3 with firmware version 1.5.0.
 * Uses MegaSquirt's "Simplified Dash Broadcasting" as described in [this PDF](http://www.msextra.com/doc/pdf/Megasquirt_CAN_Broadcast.pdf).
