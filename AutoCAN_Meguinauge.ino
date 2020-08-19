@@ -1,12 +1,12 @@
+#include <AltSoftSerial.h>
 #include <mcp_can.h>
 #include <mcp_can_dfs.h>
 //#include <LiquidCrystal.h>
-#include <SoftwareSerial.h>
 
 // SET UP PINS ///////////////////////////////////////////
 
 //LiquidCrystal lcd(14, 3, 4, 5, 6, 7); //RS,EN,DB4,DB5,DB6,DB7
-SoftwareSerial lcd(0,3);
+AltSoftSerial lcd;
 const byte LED_PIN = 15;
 const byte SPI_CS_PIN = 10;
 
@@ -830,20 +830,20 @@ bool calculate_error_light() {
   return inError;
 }
 
-void setSerialCursor(SoftwareSerial lcd, int column, int row) {
+void setSerialCursor(AltSoftSerial lcd, int column, int row) {
   lcd.write(0xFE);
   lcd.write(0x47);
   lcd.write((byte)column+1);
   lcd.write((byte)row+1);
 }
 
-void clearSerialLCD(SoftwareSerial lcd) {
+void clearSerialLCD(AltSoftSerial lcd) {
   lcd.write(0xFE);
   lcd.write(0x58);
 }
 
 //does not work with zeros e.g. needs at least one dot drawn on each row
-void createCustomSerialChar(SoftwareSerial lcd, int pos, byte data[]) {
+void createCustomSerialChar(AltSoftSerial lcd, int pos, byte data[]) {
   lcd.write(0xFE);
   lcd.write(0x4E);
   lcd.write((uint8_t)pos);
