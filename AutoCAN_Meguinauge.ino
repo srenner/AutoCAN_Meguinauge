@@ -4,11 +4,14 @@
 
 // SET UP PINS ///////////////////////////////////////////
 
+//This version of AltSoftSerial hard-codes the pins to 9 (rx) and 5(tx)
+//This also disables PWM on 6 and 7
 AltSoftSerial lcd;
+
 const byte LED_PIN = 15;
 const byte SPI_CS_PIN = 10;
 
-const byte MODE_PIN = 9;
+
 const byte GAUGE_PIN = 18;
 //button pin results with internal pullup:
 //2 mostly works but is very noisy
@@ -179,7 +182,6 @@ void setup() {
   currentMode = quad;
 
   pinMode(LED_PIN, OUTPUT);
-  pinMode(MODE_PIN, INPUT_PULLUP);
   pinMode(GAUGE_PIN, INPUT_PULLUP);
   //digitalWrite(MODE_PIN, INPUT_PULLUP);
 
@@ -287,7 +289,7 @@ void loop() {
   }
 
   previousModeButton = currentModeButton;
-  currentModeButton = digitalRead(MODE_PIN);
+  currentModeButton = digitalRead(GAUGE_PIN);
   if(currentModeButton != previousModeButton) {
     if(currentModeButton == 0) {
       modeButtonMillis = currentMillis;
