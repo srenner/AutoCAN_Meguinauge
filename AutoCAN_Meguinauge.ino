@@ -10,18 +10,7 @@ AltSoftSerial lcd;
 
 const byte LED_PIN = 15;
 const byte SPI_CS_PIN = 10;
-
-
 const byte GAUGE_PIN = 18;
-//button pin results with internal pullup:
-//2 mostly works but is very noisy
-//8 is always low
-//9 works
-//11,12 interrups canbus even though not declared in this file
-//16, 17 doesn't work
-//18 works
-//19 doesn't work
-
 
 // CREATE CUSTOM LCD CHARACTERS //////////////////////////
 
