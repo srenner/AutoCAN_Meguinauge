@@ -141,9 +141,10 @@ EngineVariable* octoModeGauges[OCTO_LEN][8];
 // MODE VARIABLES ////////////////////////////////////
 
 enum Mode {
+  single,
   dual,
-  quad,
-  octo,
+  sensor_warmup,
+  engine_warmup,
   diag
 };
 Mode currentMode;
@@ -169,7 +170,6 @@ MCP_CAN CAN(SPI_CS_PIN);
 
 void setup() {
   
-  currentMode = quad;
 
   pinMode(LED_ERR, OUTPUT);
   pinMode(LED_SHIFT, OUTPUT);
@@ -281,17 +281,7 @@ void loop() {
 
   previousModeButton = currentModeButton;
   currentModeButton = digitalRead(GAUGE_PIN);
-  if(currentModeButton != previousModeButton) {
-    if(currentModeButton == 0) {
-      modeButtonMillis = currentMillis;
-      next_mode();
-    }
-    else {
-      if((currentMillis - modeButtonMillis) < DEBOUNCE_DELAY) {
-        currentModeButton = 0;
-      }
-    }
-  }
+
 
   previousGaugeButton = currentGaugeButton;
   currentGaugeButton = digitalRead(GAUGE_PIN);
@@ -309,18 +299,7 @@ void loop() {
   }
 }
 
-void next_mode() {
-  if(currentMode == dual) {
-    currentMode = quad;
-  }
-  else if(currentMode == quad) {
-    currentMode = octo;
-  }
-  else if(currentMode == octo) {
-    currentMode = dual;
-  }
-  //diag mode is not implemented yet
-}
+
 
 void next_gauge() {
 
@@ -334,22 +313,7 @@ void next_gauge() {
       dualIndex++;
     }
   }
-  else if(currentMode == quad) {
-    if(quadIndex == (QUAD_LEN - 1)) {
-      quadIndex = 0;
-    }
-    else {
-      quadIndex++;
-    }
-  }
-  else if(currentMode == octo) {
-    if(octoIndex == (OCTO_LEN - 1)) {
-      octoIndex = 0;
-    }
-    else {
-      octoIndex++;
-    }
-  }
+
   else {
     Serial.println("unknown mode");
   }
