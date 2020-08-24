@@ -47,6 +47,25 @@ Each row contains the engine parameter short code, value, and half-width bar gra
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | T | G | T |   | 1 | 4 | . | 7 | █ | █ | █ | █ |   |   |   |   |
 
+## Display List
+
+* Warmup
+* Runtime/Distance
+* AFR/TGT
+* CLT/IAT
+* AFR/MAP
+* AFR/EGO
+* VSS/RPM
+* RPM/BAT
+* BAT
+* CLT
+* IAT
+* AFR
+* MAP
+* ADV
+* TPS
+* PW1
+
 ## MegaSquirt details
 * Tested using MegaSquirt-3 with firmware version 1.5.0.
 * Uses MegaSquirt's "Simplified Dash Broadcasting" as described in [this PDF](http://www.msextra.com/doc/pdf/Megasquirt_CAN_Broadcast.pdf).
