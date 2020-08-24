@@ -8,7 +8,7 @@
 //This also disables PWM on 6 and 7
 AltSoftSerial lcd;
 
-const byte LED_PIN = 15;
+const byte LED_PIN = LED_BUILTIN;
 const byte SPI_CS_PIN = 10;
 const byte GAUGE_PIN = 18;
 
