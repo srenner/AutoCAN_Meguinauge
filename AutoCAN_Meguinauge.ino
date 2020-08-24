@@ -8,7 +8,8 @@
 //This also disables PWM on 6 and 7
 AltSoftSerial lcd;
 
-const byte LED_PIN = LED_BUILTIN;
+const byte LED_ERR = LED_BUILTIN;
+const byte LED_SHIFT = 15;
 const byte SPI_CS_PIN = 10;
 const byte GAUGE_PIN = 18;
 
@@ -170,7 +171,8 @@ void setup() {
   
   currentMode = quad;
 
-  pinMode(LED_PIN, OUTPUT);
+  pinMode(LED_ERR, OUTPUT);
+  pinMode(LED_SHIFT, OUTPUT);
   pinMode(GAUGE_PIN, INPUT_PULLUP);
   //digitalWrite(MODE_PIN, INPUT_PULLUP);
 
@@ -273,7 +275,7 @@ void loop() {
     bool err = calculate_error_light();
     if(err != inError) {
       inError = err;
-      digitalWrite(LED_PIN, err);  
+      digitalWrite(LED_ERR, err);  
     }
   }
 
