@@ -1,4 +1,5 @@
-#include <AltSoftSerial.h>
+#include <Arduino.h>
+#include "Can485DisplayHelper.h"
 #include <mcp_can.h>
 #include <mcp_can_dfs.h>
 
@@ -6,76 +7,13 @@
 
 //This version of AltSoftSerial hard-codes the pins to 9 (rx) and 5(tx)
 //This also disables PWM on 6 and 7
-AltSoftSerial lcd;
+
 
 const byte LED_ERR = LED_BUILTIN;
 const byte LED_SHIFT = 15;
 const byte SPI_CS_PIN = 10;
 const byte GAUGE_PIN = 18;
 
-// CREATE CUSTOM LCD CHARACTERS //////////////////////////
-
-byte fill1[8] = {
-  0x10,
-  0x10,
-  0x10,
-  0x10,
-  0x10,
-  0x10,
-  0x10,
-  0x10
-};
-byte fill2[8] = {
-  0x18,
-  0x18,
-  0x18,
-  0x18,
-  0x18,
-  0x18,
-  0x18,
-  0x18
-};
-byte fill3[8] = {
-  0x1C,
-  0x1C,
-  0x1C,
-  0x1C,
-  0x1C,
-  0x1C,
-  0x1C,
-  0x1C
-};
-byte fill4[8] = {
-  0x1E,
-  0x1E,
-  0x1E,
-  0x1E,
-  0x1E,
-  0x1E,
-  0x1E,
-  0x1E
-};
-byte fill5[8] = {
-  0x1F,
-  0x1F,
-  0x1F,
-  0x1F,
-  0x1F,
-  0x1F,
-  0x1F,
-  0x1F
-};
-
-byte fillMiddle[8] = {
-  0x04,
-  0x04,
-  0x04,
-  0x04,
-  0x04,
-  0x04,
-  0x04,
-  0x04  
-};
 
 // BUILD ENGINE VARIABLES ///////////////////////////////////////
 
@@ -206,70 +144,30 @@ void setup() {
   allGauges[18] = &engine_tcr;
   allGauges[19] = &engine_lct;
   
-  lcd.begin(9600);
-  // set the size of the display
-  lcd.write(0xFE);
-  lcd.write(0xD1);
-  lcd.write(20);
-  lcd.write(4);
-  delay(10);
 
-  // set the contrast
-  lcd.write(0xFE);
-  lcd.write(0x50);
-  lcd.write(240);
-  delay(10);       
-  
-  // set the brightness
-  lcd.write(0xFE);
-  lcd.write(0x99);
-  lcd.write(255);
-  delay(10);      
-
-  // set the backlight color
-  lcd.write(0xFE);
-  lcd.write(0xD0);
-  lcd.write(255);         // red 
-  lcd.write((uint8_t)0);  // green
-  lcd.write((uint8_t)0);  // blue
-  delay(10);
-  
-  createCustomSerialChar(lcd, 0, fill1);
-  createCustomSerialChar(lcd, 1, fill2);
-  createCustomSerialChar(lcd, 2, fill3);
-  createCustomSerialChar(lcd, 3, fill4);
-  createCustomSerialChar(lcd, 4, fill5);
-  createCustomSerialChar(lcd, 5, fillMiddle);
- 
-  clearSerialLCD(lcd);
-
-  setSerialCursor(lcd, 0, 0);
-  lcd.print("Starting up...");
 
   Serial.begin(115200);
   while (CAN_OK != CAN.begin(CAN_500KBPS)) {
-    lcd.print(F("Waiting for CAN bus"));
-    setSerialCursor(lcd,0, 0);    
+    //lcd.print(F("Waiting for CAN bus"));
     delay(100);
   }
-    setSerialCursor(lcd,0, 0);    
-    lcd.print(F("Connected to ECU"));
-    setSerialCursor(lcd,0, 0);    
+    //lcd.print(F("Connected to ECU"));
 }
 
 void loop() {
   load_from_can();
   
   currentMillis = millis();
+
+  //draw display
   if(currentMillis - lastDisplayMillis >= displayInterval && currentMillis > 500) {
     lastDisplayMillis = currentMillis;
 
-      if(currentMode == dual) {
-        draw_dual_gauges();
-      }
+      //do the needful
 
   }
 
+  //check for errors
   if(currentMillis - lastDiagnosticMillis >= diagnosticInterval && currentMillis > 500) {
     lastDiagnosticMillis = currentMillis;
     bool err = calculate_error_light();
@@ -320,42 +218,11 @@ void next_gauge() {
 }
 
 void clear_mode() {
-  dualModeReady = false;
-  quadModeReady = false;
-  octoModeReady = false;
-  diagModeReady = false;
-  //lcd.clear();
-  lcd.write(0xFE);
-  lcd.write(0x58);
+
 }
 
 void draw_dual_gauges() {
-  if(!dualModeReady) {
-    clear_mode();
-    setSerialCursor(lcd,0, 0);
-    lcd.print(dualModeGauges[dualIndex][0]->shortLabel);
-    setSerialCursor(lcd,0, 2);
-    lcd.print(dualModeGauges[dualIndex][1]->shortLabel);
-    dualModeReady = true;
-  }
-  //if(dualModeGauges[0][0]->currentValue != dualModeGauges[dualIndex][0]->previousValue) {
-    setSerialCursor(lcd,4, 0);
-    if(is_current_value_shorter(*dualModeGauges[0][0])) {
-      lcd.print(F("     "));
-      setSerialCursor(lcd,4, 0);
-    }
-    lcd.print(dualModeGauges[dualIndex][0]->currentValue, dualModeGauges[dualIndex][0]->decimalPlaces);
-    draw_bar(*dualModeGauges[dualIndex][0], 1, 0);
-  //}
-  //if(dualModeGauges[0][1]->currentValue != dualModeGauges[0][1]->previousValue) {
-    setSerialCursor(lcd,4, 2);
-    if(is_current_value_shorter(*dualModeGauges[dualIndex][1])) {
-      lcd.print(F("     "));
-      setSerialCursor(lcd,4, 2);
-    }
-    lcd.print(dualModeGauges[dualIndex][1]->currentValue, dualModeGauges[dualIndex][1]->decimalPlaces);
-    draw_bar(*dualModeGauges[dualIndex][1], 3, 0);
-  //}
+  //dual
 }
 
 
@@ -536,67 +403,7 @@ bool is_current_value_shorter(EngineVariable engine) {
 }
 
 void draw_bar(EngineVariable engineVar, byte row, byte column) {
-  /*if(engineVar.currentValue == engineVar.previousValue) {
-    //relax homeboy
-  }*/
-  if(true){
-    setSerialCursor(lcd, column, row);
-    
-    //delete previous bar if it is too long
-    //todo optimize to only delete the needful
-    if(engineVar.currentValue < engineVar.previousValue) {
-
-      /*char *blank = malloc((20 - column) + 1);
-      memset(blank, ' ', (20 - column));
-      blank[(20 - column)] = '\0';
-      lcd.write(blank);
-      for(byte i = 0; i < (20 - column) + 1; i++) {
-        free(blank[i]);
-      }
-      free(blank);*/
-
-      /* HAVING MEMORY/PERFORMANCE ISSUES HERE. HARDCODING THIS SEEMS TO HELP. */
-
-      if(column == 0) {
-        lcd.write("                    ");  //hard coded value for dual mode
-      }
-      else {
-        lcd.write("           ");           //hard-coded value for quad mode
-      }
-      setSerialCursor(lcd, column, row);
-    }
-
-    //calculate bars
-    //todo optimize and correct partial bars
-    byte percent = ((engineVar.currentValue - engineVar.minimum) * 100) / (engineVar.maximum - engineVar.minimum);
-    float bars = (percent/(100.0/(20.0 - column)) * 10.0) / 10.0;
-    byte fullBars = (byte)bars;
-    byte partialBars = (byte)((bars - ((byte)(bars))) /0.2);
-
-    //todo optimize/fix this
-    if(engineVar.currentValue == engineVar.minimum) {
-      fullBars = 0;
-      partialBars = 0;
-    }
-
-    //prevent graph overrun
-    if(fullBars >= (20 - column)) {
-      fullBars = (20 - column);
-      partialBars = 0;
-    }
-    
-    setSerialCursor(lcd, column, row);
-    for(int i = 0; i < fullBars; i++) {
-      //lcd.write(byte(4));
-      lcd.write((uint8_t)4);
-      
-    }
-    if(partialBars > 0) {
-      //Serial.println("printing a partial bar " + partialBars);
-      //lcd.write(byte(partialBars - 1));
-      lcd.write((uint8_t)partialBars-1);
-    }  
-  }  
+  //todo
 }
 
 bool calculate_error_light() {
@@ -622,25 +429,6 @@ bool calculate_error_light() {
   return inError;
 }
 
-void setSerialCursor(AltSoftSerial lcd, int column, int row) {
-  lcd.write(0xFE);
-  lcd.write(0x47);
-  lcd.write((byte)column+1);
-  lcd.write((byte)row+1);
-}
 
-void clearSerialLCD(AltSoftSerial lcd) {
-  lcd.write(0xFE);
-  lcd.write(0x58);
-}
 
-//does not work with zeros e.g. needs at least one dot drawn on each row
-void createCustomSerialChar(AltSoftSerial lcd, int pos, byte data[]) {
-  lcd.write(0xFE);
-  lcd.write(0x4E);
-  lcd.write((uint8_t)pos);
-  for(int i = 0; i < 8; i++) {
-    lcd.write(data[i]);
-  }
-  delay(10); 
-}
+
