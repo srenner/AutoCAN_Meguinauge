@@ -1,13 +1,13 @@
 #include <Arduino.h>
 #include "Can485DisplayHelper.h"
-#include <mcp_can.h>
-#include <mcp_can_dfs.h>
+#include <ASTCanLib.h>
+
+#define BLOCK 255 //block character to build bar graphs
 
 // SET UP PINS ///////////////////////////////////////////
 
 //This version of AltSoftSerial hard-codes the pins to 9 (rx) and 5(tx)
 //This also disables PWM on 6 and 7
-
 
 const byte LED_ERR = LED_BUILTIN;
 const byte LED_SHIFT = 15;

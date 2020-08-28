@@ -76,7 +76,7 @@ void DisplayInit() {
         0x04  
     };
     
-    if(true) {
+    if(false) {
         createCustomChar(0, fill1);
         createCustomChar(1, fill2);
         createCustomChar(2, fill3);
