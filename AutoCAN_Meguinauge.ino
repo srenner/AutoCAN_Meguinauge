@@ -11,7 +11,7 @@
 
 const byte LED_ERR = LED_BUILTIN;
 const byte LED_SHIFT = 15;
-const byte SPI_CS_PIN = 10;
+const byte SPI_CS_PIN = 10; //unused with the can485 library?
 const byte GAUGE_PIN = 18;
 
 
@@ -62,20 +62,6 @@ unsigned long lastDisplayMillis = 0;
 unsigned int diagnosticInterval = 5000;
 unsigned long lastDiagnosticMillis = 0;
 
-// GAUGE ARRAYS FOR EACH MODE ////////////////////////
-
-const byte DUAL_LEN = 3;
-const byte QUAD_LEN = 2;
-const byte OCTO_LEN = 1;
-
-byte dualIndex = 0;
-byte quadIndex = 0;
-byte octoIndex = 0;
-
-EngineVariable* dualModeGauges[DUAL_LEN][2];
-EngineVariable* quadModeGauges[QUAD_LEN][4];
-EngineVariable* octoModeGauges[OCTO_LEN][8];
-
 // MODE VARIABLES ////////////////////////////////////
 
 enum Mode {
@@ -88,8 +74,6 @@ enum Mode {
 Mode currentMode;
 
 bool dualModeReady = false;
-bool quadModeReady = false;
-bool octoModeReady = false;
 bool diagModeReady = false;
 
 bool inError = false;
@@ -104,7 +88,17 @@ unsigned long gaugeButtonMillis = 0;
 
 const byte DEBOUNCE_DELAY = 250;
 
-MCP_CAN CAN(SPI_CS_PIN); 
+
+// CAN VARIABLES /////////////////////////////////////
+
+//MCP_CAN CAN(SPI_CS_PIN); //old library
+st_cmd_t canMsg;
+uint8_t canBuffer[8] = {};
+
+#define MESSAGE_ID        0       // Message ID
+#define MESSAGE_PROTOCOL  1       // CAN protocol (0: CAN 2.0A, 1: CAN 2.0B)
+#define MESSAGE_LENGTH    8       // Data length: 8 bytes
+#define MESSAGE_RTR       0       // rtr bit
 
 void setup() {
   
@@ -112,16 +106,7 @@ void setup() {
   pinMode(LED_ERR, OUTPUT);
   pinMode(LED_SHIFT, OUTPUT);
   pinMode(GAUGE_PIN, INPUT_PULLUP);
-  //digitalWrite(MODE_PIN, INPUT_PULLUP);
 
-  dualModeGauges[0][0] = &engine_rpm;
-  dualModeGauges[0][1] = &engine_afr;
-
-  dualModeGauges[1][0] = &engine_map;
-  dualModeGauges[1][1] = &engine_afr;
-
-  dualModeGauges[2][0] = &engine_afr;
-  dualModeGauges[2][1] = &engine_tgt;
   
   allGauges[0] = &engine_map;
   allGauges[1] = &engine_rpm;
@@ -145,13 +130,12 @@ void setup() {
   allGauges[19] = &engine_lct;
   
 
+  writeToDisplay("Waiting for ECU");
+  canInit(500000);                        // Initialise CAN port. must be before Serial.begin
+  Serial.begin(1000000);                  // start serial port
+  canMsg.pt_data = &canBuffer[0];         // reference message data to buffer
+  writeToDisplay("Connected to ECU");
 
-  Serial.begin(115200);
-  while (CAN_OK != CAN.begin(CAN_500KBPS)) {
-    //lcd.print(F("Waiting for CAN bus"));
-    delay(100);
-  }
-    //lcd.print(F("Connected to ECU"));
 }
 
 void loop() {
@@ -168,73 +152,58 @@ void loop() {
   }
 
   //check for errors
-  if(currentMillis - lastDiagnosticMillis >= diagnosticInterval && currentMillis > 500) {
-    lastDiagnosticMillis = currentMillis;
-    bool err = calculate_error_light();
-    if(err != inError) {
-      inError = err;
-      digitalWrite(LED_ERR, err);  
-    }
-  }
-
-  previousModeButton = currentModeButton;
-  currentModeButton = digitalRead(GAUGE_PIN);
-
-
-  previousGaugeButton = currentGaugeButton;
-  currentGaugeButton = digitalRead(GAUGE_PIN);
-  if(currentGaugeButton != previousGaugeButton) {
-    if(currentGaugeButton == 0) {
-      gaugeButtonMillis = currentMillis;
-      Serial.println("next gauge");
-      next_gauge();
-    }
-    else {
-      if((currentMillis - gaugeButtonMillis) < DEBOUNCE_DELAY) {
-        currentGaugeButton = 0;
+  if(false) {
+    if(currentMillis - lastDiagnosticMillis >= diagnosticInterval && currentMillis > 500) {
+      lastDiagnosticMillis = currentMillis;
+      bool err = calculate_error_light();
+      if(err != inError) {
+        inError = err;
+        digitalWrite(LED_ERR, err);  
       }
     }
   }
+
+
+  // previousModeButton = currentModeButton;
+  // currentModeButton = digitalRead(GAUGE_PIN);
+
+
+  // previousGaugeButton = currentGaugeButton;
+  // currentGaugeButton = digitalRead(GAUGE_PIN);
+  // if(currentGaugeButton != previousGaugeButton) {
+  //   if(currentGaugeButton == 0) {
+  //     gaugeButtonMillis = currentMillis;
+  //     // Serial.println("next gauge");
+  //     // next_gauge();
+  //   }
+  //   else {
+  //     if((currentMillis - gaugeButtonMillis) < DEBOUNCE_DELAY) {
+  //       currentGaugeButton = 0;
+  //     }
+  //   }
+  // }
 }
-
-
-
-void next_gauge() {
-
-  clear_mode();
-  
-  if(currentMode == dual) {
-    if(dualIndex == (DUAL_LEN - 1)) {
-      dualIndex = 0; 
-    }
-    else {
-      dualIndex++;
-    }
-  }
-
-  else {
-    Serial.println("unknown mode");
-  }
-}
-
-void clear_mode() {
-
-}
-
-void draw_dual_gauges() {
-  //dual
-}
-
-
 
 void load_from_can() {
+  clearBuffer(&canBuffer[0]);
+  canMsg.cmd = CMD_RX_DATA;
+
+  // Wait for the command to be accepted by the controller
+  while(can_cmd(&canMsg) != CAN_CMD_ACCEPTED);
+  // Wait for command to finish executing
+  while(can_get_status(&canMsg) == CAN_STATUS_NOT_COMPLETED);
+  // Data is now available in the message object
+  // Print received data to the terminal
+  serialPrintData(&canMsg);
+
+
   unsigned char len = 0;
   unsigned char buf[8];
-  if(CAN_MSGAVAIL == CAN.checkReceive())            // check if data coming
+  if(false)            // check if data coming
   {
-    CAN.readMsgBuf(&len, buf);    // read data,  len: data length, buf: data buf
+    //CAN.readMsgBuf(&len, buf);    // read data,  len: data length, buf: data buf
 
-    unsigned int canId = CAN.getCanId();
+    unsigned int canId = -1; //CAN.getCanId();
     
     switch(canId) {
       case 1512:
@@ -340,6 +309,42 @@ void load_from_can() {
     }
   }
 }
+
+
+void serialPrintData(st_cmd_t *msg){
+  char textBuffer[50] = {0};
+  if (msg->ctrl.ide>0){
+    sprintf(textBuffer,"id %d ",msg->id.ext);
+  }
+  else
+  {
+    sprintf(textBuffer,"id %04x ",msg->id.std);
+  }
+  Serial.print(textBuffer);
+  
+  //  IDE
+  sprintf(textBuffer,"ide %d ",msg->ctrl.ide);
+  Serial.print(textBuffer);
+  //  RTR
+  sprintf(textBuffer,"rtr %d ",msg->ctrl.rtr);
+  Serial.print(textBuffer);
+  //  DLC
+  sprintf(textBuffer,"dlc %d ",msg->dlc);
+  Serial.print(textBuffer);
+  //  Data
+  sprintf(textBuffer,"data ");
+  Serial.print(textBuffer);
+  
+  for (int i =0; i<msg->dlc; i++){
+    sprintf(textBuffer,"%02X ",msg->pt_data[i]);
+    Serial.print(textBuffer);
+  }
+  Serial.print("\r\n");
+}
+
+
+
+
 
 void increment_counter(EngineVariable* engine) {
   if(engine->currentValue > engine->maximum) {
