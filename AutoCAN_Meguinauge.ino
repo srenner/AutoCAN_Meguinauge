@@ -95,7 +95,7 @@ const byte DEBOUNCE_DELAY = 250;
 st_cmd_t canMsg;
 uint8_t canBuffer[8] = {};
 
-#define MESSAGE_ID        0       // Message ID
+#define MESSAGE_ID        1512       // Message ID
 #define MESSAGE_PROTOCOL  1       // CAN protocol (0: CAN 2.0A, 1: CAN 2.0B)
 #define MESSAGE_LENGTH    8       // Data length: 8 bytes
 #define MESSAGE_RTR       0       // rtr bit
@@ -133,7 +133,7 @@ void setup() {
 
   writeToDisplay("Waiting for ECU");
   canInit(500000);                        // Initialise CAN port. must be before Serial.begin
-  Serial.begin(9600);                  // start serial port
+  Serial.begin(1000000);                  // start serial port
   Serial.println("canInit finished");
   canMsg.pt_data = &canBuffer[0];         // reference message data to buffer
   setCursorPosition(1,1);
@@ -159,6 +159,11 @@ void loop() {
     //simply loop unitl can status is complete
   }
   writeToDisplay("got can status");
+  serialPrintData(&canMsg);
+
+
+
+
   delay(1000);
   
   currentMillis = millis();
@@ -438,5 +443,3 @@ bool calculate_error_light() {
   }
   return inError;
 }
-
-
