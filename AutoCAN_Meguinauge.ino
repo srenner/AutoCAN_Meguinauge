@@ -133,41 +133,33 @@ void setup() {
 
   writeToDisplay("Waiting for ECU");
   canInit(500000);                        // Initialise CAN port. must be before Serial.begin
-  Serial.begin(1000000);                  // start serial port
+  Serial.begin(9600);                  // start serial port
   Serial.println("canInit finished");
   canMsg.pt_data = &canBuffer[0];         // reference message data to buffer
   setCursorPosition(1,1);
   writeToDisplay("Connected to ECU");
   Serial.println("Connected to ECU");
+  delay(200);
+  clearDisplay();
 
 }
 
 void loop() {
-  clearDisplay();
-  setCursorPosition(1,1);
-  writeToDisplay("sham");
-  delay(500);
-  writeToDisplay("wow");
-  //writeToDisplay((char *)millis());
   
-
   //load_from_can();
   clearBuffer(&canBuffer[0]);
   canMsg.cmd = CMD_RX_DATA;
 
-  // Wait for the command to be accepted by the controller
   while(can_cmd(&canMsg) != CAN_CMD_ACCEPTED) {
-    clearDisplay();
-    writeToDisplay("waiting for cmd accept");
+    //do nothing for now
+    //simply loop until can bus cmd accepted
   }
-  clearDisplay();
-  writeToDisplay("cmd accepted");
-  // Wait for command to finish executing
   while(can_get_status(&canMsg) == CAN_STATUS_NOT_COMPLETED) {
-    writeToDisplay("waiting for can status");
+    //do nothing for now
+    //simply loop unitl can status is complete
   }
   writeToDisplay("got can status");
-
+  delay(1000);
   
   currentMillis = millis();
 
