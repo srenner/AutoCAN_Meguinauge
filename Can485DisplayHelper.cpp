@@ -110,6 +110,13 @@ void setSplash() {
 }
 
 void writeToDisplay(char *content) {
+    clearDisplay();
+    setCursorPosition(1,1);
+    lcd.write(content);
+}
+
+void writeToDisplay(char *content, int row, int column) {
+    setCursorPosition(row, column);
     lcd.write(content);
 }
 

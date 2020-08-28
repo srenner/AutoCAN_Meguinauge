@@ -101,7 +101,8 @@ uint8_t canBuffer[8] = {};
 #define MESSAGE_RTR       0       // rtr bit
 
 void setup() {
-  
+
+  DisplayInit();  
 
   pinMode(LED_ERR, OUTPUT);
   pinMode(LED_SHIFT, OUTPUT);
@@ -133,22 +134,52 @@ void setup() {
   writeToDisplay("Waiting for ECU");
   canInit(500000);                        // Initialise CAN port. must be before Serial.begin
   Serial.begin(1000000);                  // start serial port
+  Serial.println("canInit finished");
   canMsg.pt_data = &canBuffer[0];         // reference message data to buffer
+  setCursorPosition(1,1);
   writeToDisplay("Connected to ECU");
+  Serial.println("Connected to ECU");
 
 }
 
 void loop() {
-  load_from_can();
+  clearDisplay();
+  setCursorPosition(1,1);
+  writeToDisplay("sham");
+  delay(500);
+  writeToDisplay("wow");
+  //writeToDisplay((char *)millis());
+  
+
+  //load_from_can();
+  clearBuffer(&canBuffer[0]);
+  canMsg.cmd = CMD_RX_DATA;
+
+  // Wait for the command to be accepted by the controller
+  while(can_cmd(&canMsg) != CAN_CMD_ACCEPTED) {
+    clearDisplay();
+    writeToDisplay("waiting for cmd accept");
+  }
+  clearDisplay();
+  writeToDisplay("cmd accepted");
+  // Wait for command to finish executing
+  while(can_get_status(&canMsg) == CAN_STATUS_NOT_COMPLETED) {
+    writeToDisplay("waiting for can status");
+  }
+  writeToDisplay("got can status");
+
   
   currentMillis = millis();
 
   //draw display
-  if(currentMillis - lastDisplayMillis >= displayInterval && currentMillis > 500) {
-    lastDisplayMillis = currentMillis;
+  if(false) {
+    if(currentMillis - lastDisplayMillis >= displayInterval && currentMillis > 500) {
+      lastDisplayMillis = currentMillis;
 
-      //do the needful
+        //do the needful
+        //writeToDisplay("draw display");
 
+    }
   }
 
   //check for errors
@@ -164,24 +195,6 @@ void loop() {
   }
 
 
-  // previousModeButton = currentModeButton;
-  // currentModeButton = digitalRead(GAUGE_PIN);
-
-
-  // previousGaugeButton = currentGaugeButton;
-  // currentGaugeButton = digitalRead(GAUGE_PIN);
-  // if(currentGaugeButton != previousGaugeButton) {
-  //   if(currentGaugeButton == 0) {
-  //     gaugeButtonMillis = currentMillis;
-  //     // Serial.println("next gauge");
-  //     // next_gauge();
-  //   }
-  //   else {
-  //     if((currentMillis - gaugeButtonMillis) < DEBOUNCE_DELAY) {
-  //       currentGaugeButton = 0;
-  //     }
-  //   }
-  // }
 }
 
 void load_from_can() {
@@ -194,7 +207,7 @@ void load_from_can() {
   while(can_get_status(&canMsg) == CAN_STATUS_NOT_COMPLETED);
   // Data is now available in the message object
   // Print received data to the terminal
-  serialPrintData(&canMsg);
+  //serialPrintData(&canMsg);
 
 
   unsigned char len = 0;
@@ -433,7 +446,5 @@ bool calculate_error_light() {
   }
   return inError;
 }
-
-
 
 
