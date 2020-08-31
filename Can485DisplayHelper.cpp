@@ -134,6 +134,11 @@ void writeToDisplay(uint8_t content) {
     lcd.write(content);
 }
 
+void writeSpecialToDisplay(int content, int row, int column) {
+    setCursorPosition(row, column);
+    lcd.write(content);
+}
+
 void createCustomChar(int pos, byte data[]) {
 
 

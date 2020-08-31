@@ -4,6 +4,8 @@
 #include <math.h>
 
 #define BLOCK 255 //block character to build bar graphs
+#define SPACE 32  //space character for start animation
+
 #define DEBUG false
 
 const int canIDs[] = {1512,1513,1514,1515,1516};
@@ -99,7 +101,6 @@ const byte DEBOUNCE_DELAY = 250;
 st_cmd_t canMsg;
 uint8_t canBuffer[8] = {};
 
-#define MESSAGE_ID        1512  // Message ID
 #define MESSAGE_PROTOCOL  0     // CAN protocol (0: CAN 2.0A, 1: CAN 2.0B)
 #define MESSAGE_LENGTH    8     // Data length: 8 bytes
 #define MESSAGE_RTR       0     // rtr bit
@@ -141,24 +142,15 @@ void setup() {
   writeToDisplay("Waiting for ECU");
   canInit(500000);                        // Initialise CAN port. must be before Serial.begin
   Serial.begin(1000000);
-  if(DEBUG) {
-    Serial.println("canInit finished");
-  }
-
-  // canMsg.pt_data  = &canBuffer[0];
-  // canMsg.ctrl.ide = MESSAGE_PROTOCOL; 
-  // canMsg.id.ext   = MESSAGE_ID;
-  // canMsg.dlc      = MESSAGE_LENGTH;
-  // canMsg.ctrl.rtr = MESSAGE_RTR;
 
   setCursorPosition(1,1);
   writeToDisplay("Connected to ECU");
   if(DEBUG) {
     Serial.println("Connected to ECU");
   }
-  delay(200);
   clearDisplay();
-
+  delay(200);
+  boot_animation();
 }
 
 void loop() {
@@ -174,12 +166,8 @@ void loop() {
     if(currentMillis - lastDisplayMillis >= displayInterval && currentMillis > 500) {
       lastDisplayMillis = currentMillis;
 
-        //writeToDisplay("draw display");
         writeToDisplay("RPM:");
-        //Serial.println(engine_rpm.currentValue);
         writeToDisplay(engine_rpm.currentValue, engine_rpm.decimalPlaces, 1, 5);
-
-        //Serial.println(engine_afr.currentValue);
 
     }
   }
@@ -195,12 +183,9 @@ void loop() {
       }
     }
   }
-
-
 }
 
 void load_from_can(int canID) {
-  //Serial.print(canID);
   clearBuffer(&canBuffer[0]);
   canMsg.cmd      = CMD_RX_DATA;
   canMsg.pt_data  = &canBuffer[0];
@@ -216,6 +201,8 @@ void load_from_can(int canID) {
   while(can_get_status(&canMsg) == CAN_STATUS_NOT_COMPLETED);
   // Data is now available in the message object
 
+  //room for improvement
+  //need to figure out how to ask the CAN bus to send the exact id i need when i need it
   if(canMsg.id.std != canID) {
     load_from_can(canID);
   }
@@ -359,10 +346,6 @@ void serialPrintData(st_cmd_t *msg){
   Serial.print("\r\n");
 }
 
-
-
-
-
 void increment_counter(EngineVariable* engine) {
   if(engine->currentValue > engine->maximum) {
     engine->highCount++;
@@ -449,4 +432,109 @@ bool calculate_error_light() {
     }
   }
   return inError;
+}
+
+void boot_animation() {
+
+  int smallDelay = 30;
+  int bigDelay = 200;
+
+  writeSpecialToDisplay(BLOCK, 1, 1);
+  writeSpecialToDisplay(BLOCK, 2, 16);
+  delay(smallDelay);
+  writeSpecialToDisplay(BLOCK, 1, 2);
+  writeSpecialToDisplay(BLOCK, 2, 15);
+  delay(smallDelay);
+  writeSpecialToDisplay(BLOCK, 1, 3);
+  writeSpecialToDisplay(BLOCK, 2, 14);
+  delay(smallDelay);
+  writeSpecialToDisplay(BLOCK, 1, 4);
+  writeSpecialToDisplay(BLOCK, 2, 13);
+  delay(smallDelay);
+  writeSpecialToDisplay(BLOCK, 1, 5);
+  writeSpecialToDisplay(BLOCK, 2, 12);
+  delay(smallDelay);
+  writeSpecialToDisplay(BLOCK, 1, 6);
+  writeSpecialToDisplay(BLOCK, 2, 11);
+  delay(smallDelay);
+  writeSpecialToDisplay(BLOCK, 1, 7);
+  writeSpecialToDisplay(BLOCK, 2, 10);
+  delay(smallDelay);
+  writeSpecialToDisplay(BLOCK, 1, 8);
+  writeSpecialToDisplay(BLOCK, 2, 9);
+  delay(smallDelay);
+  writeSpecialToDisplay(BLOCK, 1, 9);
+  writeSpecialToDisplay(BLOCK, 2, 8);
+  delay(smallDelay);
+  writeSpecialToDisplay(BLOCK, 1, 10);
+  writeSpecialToDisplay(BLOCK, 2, 7);
+  delay(smallDelay);
+  writeSpecialToDisplay(BLOCK, 1, 11);
+  writeSpecialToDisplay(BLOCK, 2, 6);
+  delay(smallDelay);
+  writeSpecialToDisplay(BLOCK, 1, 12);
+  writeSpecialToDisplay(BLOCK, 2, 5);
+  delay(smallDelay);
+  writeSpecialToDisplay(BLOCK, 1, 13);
+  writeSpecialToDisplay(BLOCK, 2, 4);
+  delay(smallDelay);
+  writeSpecialToDisplay(BLOCK, 1, 14);
+  writeSpecialToDisplay(BLOCK, 2, 3);
+  delay(smallDelay);
+  writeSpecialToDisplay(BLOCK, 1, 15);
+  writeSpecialToDisplay(BLOCK, 2, 2);
+  delay(smallDelay);
+  writeSpecialToDisplay(BLOCK, 1, 16);
+  writeSpecialToDisplay(BLOCK, 2, 1);
+
+  delay(bigDelay);
+
+  writeSpecialToDisplay(SPACE, 1, 1);
+  writeSpecialToDisplay(SPACE, 2, 16);
+  delay(smallDelay);
+  writeSpecialToDisplay(SPACE, 1, 2);
+  writeSpecialToDisplay(SPACE, 2, 15);
+  delay(smallDelay);
+  writeSpecialToDisplay(SPACE, 1, 3);
+  writeSpecialToDisplay(SPACE, 2, 14);
+  delay(smallDelay);
+  writeSpecialToDisplay(SPACE, 1, 4);
+  writeSpecialToDisplay(SPACE, 2, 13);
+  delay(smallDelay);
+  writeSpecialToDisplay(SPACE, 1, 5);
+  writeSpecialToDisplay(SPACE, 2, 12);
+  delay(smallDelay);
+  writeSpecialToDisplay(SPACE, 1, 6);
+  writeSpecialToDisplay(SPACE, 2, 11);
+  delay(smallDelay);
+  writeSpecialToDisplay(SPACE, 1, 7);
+  writeSpecialToDisplay(SPACE, 2, 10);
+  delay(smallDelay);
+  writeSpecialToDisplay(SPACE, 1, 8);
+  writeSpecialToDisplay(SPACE, 2, 9);
+  delay(smallDelay);
+  writeSpecialToDisplay(SPACE, 1, 9);
+  writeSpecialToDisplay(SPACE, 2, 8);
+  delay(smallDelay);
+  writeSpecialToDisplay(SPACE, 1, 10);
+  writeSpecialToDisplay(SPACE, 2, 7);
+  delay(smallDelay);
+  writeSpecialToDisplay(SPACE, 1, 11);
+  writeSpecialToDisplay(SPACE, 2, 6);
+  delay(smallDelay);
+  writeSpecialToDisplay(SPACE, 1, 12);
+  writeSpecialToDisplay(SPACE, 2, 5);
+  delay(smallDelay);
+  writeSpecialToDisplay(SPACE, 1, 13);
+  writeSpecialToDisplay(SPACE, 2, 4);
+  delay(smallDelay);
+  writeSpecialToDisplay(SPACE, 1, 14);
+  writeSpecialToDisplay(SPACE, 2, 3);
+  delay(smallDelay);
+  writeSpecialToDisplay(SPACE, 1, 15);
+  writeSpecialToDisplay(SPACE, 2, 2);
+  delay(smallDelay);
+  writeSpecialToDisplay(SPACE, 1, 16);
+  writeSpecialToDisplay(SPACE, 2, 1);
+
 }
