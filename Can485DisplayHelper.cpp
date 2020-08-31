@@ -120,6 +120,16 @@ void writeToDisplay(char *content, int row, int column) {
     lcd.write(content);
 }
 
+void writeToDisplay(float content, int row, int column) {
+    setCursorPosition(row, column);
+    
+    static char outstr[15];
+    dtostrf(content,7, 3, outstr);
+    
+    
+    lcd.write(outstr);
+}
+
 void writeToDisplay(uint8_t content) {
     lcd.write(content);
 }

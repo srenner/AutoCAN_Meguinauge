@@ -4,6 +4,10 @@
 #include <math.h>
 
 #define BLOCK 255 //block character to build bar graphs
+#define DEBUG false
+
+const int canIDs[] = {1512,1513,1514,1515,1516};
+int canIDLength = sizeof(canIDs) / sizeof(canIDs[0]);
 
 // SET UP PINS ///////////////////////////////////////////
 
@@ -95,7 +99,7 @@ const byte DEBOUNCE_DELAY = 250;
 st_cmd_t canMsg;
 uint8_t canBuffer[8] = {};
 
-#define MESSAGE_ID        1514  // Message ID
+#define MESSAGE_ID        1512  // Message ID
 #define MESSAGE_PROTOCOL  0     // CAN protocol (0: CAN 2.0A, 1: CAN 2.0B)
 #define MESSAGE_LENGTH    8     // Data length: 8 bytes
 #define MESSAGE_RTR       0     // rtr bit
@@ -132,54 +136,50 @@ void setup() {
   allGauges[18] = &engine_tcr;
   allGauges[19] = &engine_lct;
   
+  const int canIDs[] = {1512,1513,1514,1515,1516};
 
   writeToDisplay("Waiting for ECU");
   canInit(500000);                        // Initialise CAN port. must be before Serial.begin
-  Serial.begin(1000000);                  // start serial port
-  Serial.println("canInit finished");
-  
-  canMsg.pt_data = &canBuffer[0];         // reference message data to buffer
+  Serial.begin(1000000);
+  if(DEBUG) {
+    Serial.println("canInit finished");
+  }
 
-  canMsg.pt_data  = &canBuffer[0];
-  canMsg.ctrl.ide = MESSAGE_PROTOCOL; 
-  canMsg.id.ext   = MESSAGE_ID;
-  canMsg.dlc      = MESSAGE_LENGTH;
-  canMsg.ctrl.rtr = MESSAGE_RTR;
-
+  // canMsg.pt_data  = &canBuffer[0];
+  // canMsg.ctrl.ide = MESSAGE_PROTOCOL; 
+  // canMsg.id.ext   = MESSAGE_ID;
+  // canMsg.dlc      = MESSAGE_LENGTH;
+  // canMsg.ctrl.rtr = MESSAGE_RTR;
 
   setCursorPosition(1,1);
   writeToDisplay("Connected to ECU");
-  Serial.println("Connected to ECU");
+  if(DEBUG) {
+    Serial.println("Connected to ECU");
+  }
   delay(200);
   clearDisplay();
 
 }
 
 void loop() {
-  
-  load_from_can();
-  //serialPrintData(&canMsg);
-  
-  //Serial.print("RPM: ");
-  //float rpm = round((canMsg.pt_data[2] * 256 + canMsg.pt_data[3]) / 10.0) * 10.0;
-  //Serial.println(rpm);
 
-  // float adv = (canMsg.pt_data[6] * 256 + canMsg.pt_data[7]) / 10.0;
-  // Serial.print("ADV: ");
-  // Serial.println(adv);
+  for(int i = 0; i < canIDLength; i++) {
+    load_from_can(canIDs[i]);
+  }
 
-
-  //delay(50);
-  
   currentMillis = millis();
 
   //draw display
-  if(false) {
+  if(true) {
     if(currentMillis - lastDisplayMillis >= displayInterval && currentMillis > 500) {
       lastDisplayMillis = currentMillis;
 
-        //do the needful
         //writeToDisplay("draw display");
+        writeToDisplay("RPM:");
+        //Serial.println(engine_rpm.currentValue);
+        writeToDisplay(engine_rpm.currentValue, 1, 5);
+
+        //Serial.println(engine_afr.currentValue);
 
     }
   }
@@ -199,27 +199,29 @@ void loop() {
 
 }
 
-void load_from_can() {
+void load_from_can(int canID) {
+  //Serial.print(canID);
   clearBuffer(&canBuffer[0]);
-  canMsg.cmd = CMD_RX_DATA;
+  canMsg.cmd      = CMD_RX_DATA;
+  canMsg.pt_data  = &canBuffer[0];
+  canMsg.ctrl.ide = MESSAGE_PROTOCOL; 
+  canMsg.id.std   = canID;
+  canMsg.id.ext   = canID;
+  canMsg.dlc      = MESSAGE_LENGTH;
+  canMsg.ctrl.rtr = MESSAGE_RTR;
 
   // Wait for the command to be accepted by the controller
   while(can_cmd(&canMsg) != CAN_CMD_ACCEPTED);
   // Wait for command to finish executing
   while(can_get_status(&canMsg) == CAN_STATUS_NOT_COMPLETED);
   // Data is now available in the message object
-  // Print received data to the terminal
-  serialPrintData(&canMsg);
 
+  if(canMsg.id.std != canID) {
+    load_from_can(canID);
+  }
 
-  unsigned char len = 0;
-  //unsigned char buf[8];
-  if(false)            // check if data coming
+  if(true)
   {
-    //CAN.readMsgBuf(&len, buf);    // read data,  len: data length, buf: data buf
-
-    unsigned int canId = -1; //CAN.getCanId();
-    
     switch(canMsg.id.std) {
       case 1512:
         engine_map.previousValue = engine_map.currentValue;

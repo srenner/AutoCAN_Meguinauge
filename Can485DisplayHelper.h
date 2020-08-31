@@ -3,6 +3,7 @@ void setCursorPosition(int,int);
 void clearDisplay();
 void setSplash();
 void writeToDisplay(char *);
+void writeToDisplay(float, int, int);
 void writeToDisplay(char *, int, int);
 void writeToDisplay(uint8_t);
 void createCustomChar(int,byte[]);
