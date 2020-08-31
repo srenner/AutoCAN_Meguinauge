@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include "Can485DisplayHelper.h"
 #include <ASTCanLib.h>
+#include <math.h>
 
 #define BLOCK 255 //block character to build bar graphs
 
@@ -160,11 +161,14 @@ void loop() {
   }
   writeToDisplay("got can status");
   serialPrintData(&canMsg);
+  Serial.print("RPM: ");
+  float rpm = round((canMsg.pt_data[2] * 256 + canMsg.pt_data[3]) / 10.0) * 10.0;
+  //round((buf[2] * 256 + buf[3]) / 10.0) * 10.0
+  Serial.println(rpm);
 
 
 
-
-  delay(1000);
+  delay(789);
   
   currentMillis = millis();
 
