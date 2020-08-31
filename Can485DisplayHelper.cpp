@@ -120,11 +120,11 @@ void writeToDisplay(char *content, int row, int column) {
     lcd.write(content);
 }
 
-void writeToDisplay(float content, int row, int column) {
+void writeToDisplay(float content, int decimalPlaces, int row, int column) {
     setCursorPosition(row, column);
     
     static char outstr[15];
-    dtostrf(content,7, 3, outstr);
+    dtostrf(content,4, decimalPlaces, outstr);
     
     
     lcd.write(outstr);

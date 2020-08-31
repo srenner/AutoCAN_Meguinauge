@@ -177,7 +177,7 @@ void loop() {
         //writeToDisplay("draw display");
         writeToDisplay("RPM:");
         //Serial.println(engine_rpm.currentValue);
-        writeToDisplay(engine_rpm.currentValue, 1, 5);
+        writeToDisplay(engine_rpm.currentValue, engine_rpm.decimalPlaces, 1, 5);
 
         //Serial.println(engine_afr.currentValue);
 
