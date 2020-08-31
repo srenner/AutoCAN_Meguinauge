@@ -40,7 +40,7 @@ struct EngineVariable
 const byte ENGINE_VARIABLE_COUNT = 20;
 EngineVariable* allGauges[ENGINE_VARIABLE_COUNT];
 EngineVariable engine_map   = {"MAP", 0.0, 0.0, 15.0, 250.0, 1, 0, 0, 0};     //manifold absolute pressure
-EngineVariable engine_rpm   = {"RPM", 0.0, 0.0, 0.0, 6500.0, 0, 0, 0, 0};     //engine rpm
+EngineVariable engine_rpm   = {"RPM", 0.0, 0.0, 700.0, 6000.0, 0, 0, 0, 0};   //engine rpm
 EngineVariable engine_clt   = {"CLT", 0.0, 0.0, 20.0, 240.0, 0, 0, 0, 0};     //coolant temp
 EngineVariable engine_tps   = {"TPS", 0.0, 0.0, 0.0, 100.0, 0, 0, 0, 0};      //throttle position
 EngineVariable engine_pw1   = {"PW1", 0.0, 0.0, 0.0, 20.0, 2, 0, 0, 0};       //injector pulse width bank 1
@@ -168,6 +168,7 @@ void loop() {
 
         writeToDisplay("RPM:");
         writeToDisplay(engine_rpm.currentValue, engine_rpm.decimalPlaces, 1, 5);
+        draw_bar(engine_rpm, 2, 1, 16);
 
     }
   }
@@ -407,8 +408,21 @@ bool is_current_value_shorter(EngineVariable engine) {
   return currentLength < previousLength;
 }
 
-void draw_bar(EngineVariable engineVar, byte row, byte column) {
-  //todo
+void draw_bar(EngineVariable engineVar, int row, int column, int maxLength) {
+  
+  int length = map(engineVar.currentValue, engineVar.minimum, engineVar.maximum, 0, maxLength);
+
+  for(int i = 0; i < maxLength; i++) {
+    if(i > length) {
+      writeSpecialToDisplay(SPACE, row, column+i);
+    }
+    else {
+      writeSpecialToDisplay(BLOCK, row, column+i);
+    }
+  }
+
+  
+
 }
 
 bool calculate_error_light() {
