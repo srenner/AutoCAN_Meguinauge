@@ -16,11 +16,9 @@ int canIDLength = sizeof(canIDs) / sizeof(canIDs[0]);
 //This version of AltSoftSerial hard-codes the pins to 9 (rx) and 5(tx)
 //This also disables PWM on 6 and 7
 
-const byte LED_ERR = LED_BUILTIN;
-const byte LED_SHIFT = 15;
-const byte SPI_CS_PIN = 10; //unused with the can485 library?
-const byte GAUGE_PIN = 18;
-
+const byte LED_ERR = LED_BUILTIN;   // 'check engine' light
+const byte LED_SHIFT = 15;          // shift light
+const byte GAUGE_PIN = 18;          // pushbutton to cycle through modes
 
 // BUILD ENGINE VARIABLES ///////////////////////////////////////
 
@@ -93,7 +91,7 @@ bool previousGaugeButton = 1;
 unsigned long gaugeButtonMillis = 0;
 
 const byte DEBOUNCE_DELAY = 250;
-
+const byte SHIFT_LIGHT_FROM_REDLINE = 500;
 
 // CAN VARIABLES /////////////////////////////////////
 
@@ -104,8 +102,6 @@ uint8_t canBuffer[8] = {};
 #define MESSAGE_PROTOCOL  0     // CAN protocol (0: CAN 2.0A, 1: CAN 2.0B)
 #define MESSAGE_LENGTH    8     // Data length: 8 bytes
 #define MESSAGE_RTR       0     // rtr bit
-
-
 
 void setup() {
 
