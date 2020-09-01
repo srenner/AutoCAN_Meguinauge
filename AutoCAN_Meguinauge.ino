@@ -8,10 +8,25 @@
 
 #define DEBUG false
 
-const int canIDs[] = {1512,1513,1514,1515,1516};
-int canIDLength = sizeof(canIDs) / sizeof(canIDs[0]);
+// CAN BUS OBJECTS //////////////////////////////////////////////
 
-// SET UP PINS ///////////////////////////////////////////
+struct CanVariable
+{
+  int id;
+  bool filled;
+  byte data[8];
+};
+
+const byte CAN_MESSAGE_COUNT = 5;
+CanVariable* allCan[CAN_MESSAGE_COUNT];
+CanVariable can1512 = {1512, false, NULL};
+CanVariable can1513 = {1513, false, NULL};
+CanVariable can1514 = {1514, false, NULL};
+CanVariable can1515 = {1515, false, NULL};
+CanVariable can1516 = {1516, false, NULL};
+
+
+// SET UP PINS //////////////////////////////////////////////////
 
 //This version of AltSoftSerial hard-codes the pins to 9 (rx) and 5(tx)
 //This also disables PWM on 6 and 7
@@ -22,6 +37,7 @@ const byte GAUGE_PIN = 18;          // pushbutton to cycle through modes
 
 // BUILD ENGINE VARIABLES ///////////////////////////////////////
 
+#pragma region engine variables
 struct EngineVariable
 {
   char* shortLabel;
@@ -34,7 +50,6 @@ struct EngineVariable
   unsigned long lowCount;
   unsigned long highCount;
 };
-
 const byte ENGINE_VARIABLE_COUNT = 20;
 EngineVariable* allGauges[ENGINE_VARIABLE_COUNT];
 EngineVariable engine_map   = {"MAP", 0.0, 0.0, 15.0, 250.0, 1, 0, 0, 0};     //manifold absolute pressure
@@ -57,6 +72,7 @@ EngineVariable engine_knk   = {"KNK", 0.0, 0.0, 0.0, 50.0, 1, 0, 0, 0};       //
 EngineVariable engine_vss   = {"VSS", 0.0, 0.0, 0.0, 160.0, 0, 0, 0, 0};      //vehicle speed
 EngineVariable engine_tcr   = {"TCR", 0.0, 0.0, 0.0, 50.0, 1, 0, 0, 0};       //traction control ignition retard
 EngineVariable engine_lct   = {"LCT", 0.0, 0.0, 0.0, 50.0, 1, 0, 0, 0};       //launch control timing
+#pragma endregion
 
 // LOOP TIMER VARIABLES ///////////////////////////////
 
@@ -82,10 +98,6 @@ bool diagModeReady = false;
 
 bool inError = false;
 
-bool currentModeButton = 1;
-bool previousModeButton = 1;
-unsigned long modeButtonMillis = 0;
-
 bool currentGaugeButton = 1;
 bool previousGaugeButton = 1;
 unsigned long gaugeButtonMillis = 0;
@@ -95,7 +107,6 @@ const byte SHIFT_LIGHT_FROM_REDLINE = 500;
 
 // CAN VARIABLES /////////////////////////////////////
 
-//MCP_CAN CAN(SPI_CS_PIN); //old library
 st_cmd_t canMsg;
 uint8_t canBuffer[8] = {};
 
@@ -110,8 +121,14 @@ void setup() {
   pinMode(LED_ERR, OUTPUT);
   pinMode(LED_SHIFT, OUTPUT);
   pinMode(GAUGE_PIN, INPUT_PULLUP);
-
   
+  allCan[0] = &can1512;
+  allCan[1] = &can1513;
+  allCan[2] = &can1514;
+  allCan[3] = &can1515;
+  allCan[4] = &can1516;
+
+  #pragma region set allGauges
   allGauges[0] = &engine_map;
   allGauges[1] = &engine_rpm;
   allGauges[2] = &engine_clt;
@@ -132,11 +149,10 @@ void setup() {
   allGauges[17] = &engine_vss;
   allGauges[18] = &engine_tcr;
   allGauges[19] = &engine_lct;
+  #pragma endregion
   
-  const int canIDs[] = {1512,1513,1514,1515,1516};
-
   writeToDisplay("Waiting for ECU");
-  canInit(500000);                        // Initialise CAN port. must be before Serial.begin
+  canInit(500000);                        // Initialise CAN port - must be before Serial.begin
   Serial.begin(1000000);
 
   setCursorPosition(1,1);
@@ -151,11 +167,60 @@ void setup() {
 
 void loop() {
 
-  for(int i = 0; i < canIDLength; i++) {
-    load_from_can(canIDs[i]);
-  }
+  Serial.println(millis());
+  load_from_can();
+  Serial.println(millis());
+  load_from_can();
+  Serial.println(millis());
+  load_from_can();
+  Serial.println(millis());
+  load_from_can();
+  Serial.println(millis());
+  load_from_can();
+
+
+
+  //int canID = load_from_can();
+
+  // bool got1512 = false;
+  // bool got1513 = false;
+  // bool got1514 = false;
+  // bool got1515 = false;
+  // bool got1516 = false;
+
+  // while(got1512 == false || got1513 == false || got1514 == false || got1515 == false || got1516 == false)
+  // {
+  //   int canID = load_from_can();
+  //   switch(canID) {
+  //     case 1512:
+  //       //if(got1512 == false) { Serial.println("1512"); }
+  //       got1512 = true;
+  //       break;
+  //     case 1513:
+  //       //if(got1513 == false) { Serial.println("1513"); }
+  //       got1513 = true;
+  //       break;
+  //     case 1514:
+  //       //if(got1514 == false) { Serial.println("1514"); }
+  //       got1514 = true;
+  //       break;
+  //     case 1515:
+  //       //if(got1515 == false) { Serial.println("1515"); }
+  //       got1515 = true;
+  //       break;
+  //     case 1516:
+  //       //if(got1516 == false) { Serial.println("1516"); }
+  //       got1516 = true;
+  //       break;
+  //   }
+  // }
+  // Serial.println("LOOP DONE");
+  
+
 
   currentMillis = millis();
+
+  Serial.println(currentMillis);
 
   //draw display
   if(true) {
@@ -165,7 +230,6 @@ void loop() {
         writeToDisplay("RPM:");
         writeToDisplay(engine_rpm.currentValue, engine_rpm.decimalPlaces, 1, 5);
         draw_bar(engine_rpm, 2, 1, 16);
-
     }
   }
 
@@ -182,27 +246,34 @@ void loop() {
   }
 }
 
-void load_from_can(int canID) {
+void resetCanVariables() {
+  for(int i = 0; i < CAN_MESSAGE_COUNT; i++) 
+  {
+    allCan[i]->filled = false;
+  }
+}
+
+int load_from_can() {
   clearBuffer(&canBuffer[0]);
   canMsg.cmd      = CMD_RX_DATA;
   canMsg.pt_data  = &canBuffer[0];
   canMsg.ctrl.ide = MESSAGE_PROTOCOL; 
-  canMsg.id.std   = canID;
-  canMsg.id.ext   = canID;
+  canMsg.id.std   = 0;
+  canMsg.id.ext   = 0;
   canMsg.dlc      = MESSAGE_LENGTH;
   canMsg.ctrl.rtr = MESSAGE_RTR;
+
+
+  
 
   // Wait for the command to be accepted by the controller
   while(can_cmd(&canMsg) != CAN_CMD_ACCEPTED);
   // Wait for command to finish executing
   while(can_get_status(&canMsg) == CAN_STATUS_NOT_COMPLETED);
   // Data is now available in the message object
+  
 
-  //room for improvement
-  //need to figure out how to ask the CAN bus to send the exact id i need when i need it
-  if(canMsg.id.std != canID) {
-    load_from_can(canID);
-  }
+  //serialPrintData(&canMsg);
 
   if(true)
   {
@@ -309,8 +380,8 @@ void load_from_can(int canID) {
         break;
     }
   }
+  return canMsg.id.std;
 }
-
 
 void serialPrintData(st_cmd_t *msg){
   char textBuffer[50] = {0};
@@ -416,9 +487,6 @@ void draw_bar(EngineVariable engineVar, int row, int column, int maxLength) {
       writeSpecialToDisplay(BLOCK, row, column+i);
     }
   }
-
-  
-
 }
 
 bool calculate_error_light() {
