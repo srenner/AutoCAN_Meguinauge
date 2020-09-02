@@ -90,7 +90,7 @@ unsigned long currentMillis = 0;
 unsigned long previousMillis = 0;
 unsigned long startPolling = 0;
 unsigned long endPolling = 0;
-int pollCount = 0;
+unsigned int pollCount = 0;
 byte displayInterval = 100;
 unsigned long lastDisplayMillis = 0;
 unsigned int diagnosticInterval = 5000;
@@ -117,7 +117,7 @@ bool previousGaugeButton = 1;
 unsigned long gaugeButtonMillis = 0;
 
 const byte DEBOUNCE_DELAY = 250;
-const byte SHIFT_LIGHT_FROM_REDLINE = 500;
+const int SHIFT_LIGHT_FROM_REDLINE = 500;
 
 
 void setup() {
@@ -174,7 +174,7 @@ void loop() {
   startPolling = millis();
   endPolling = startPolling;
   pollCount = 0;
-  while(endPolling = millis() < startPolling + 200)
+  while(pollCount < 100)
   {
     load_from_can();
     pollCount++;
