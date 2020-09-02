@@ -210,13 +210,11 @@ void loop() {
     if(currentMillis - lastDisplayMillis >= displayInterval && currentMillis > 500) {
       lastDisplayMillis = currentMillis;
 
-        if(false) {
-          writeToDisplay("RPM:");
-          writeToDisplay(engine_rpm.currentValue, engine_rpm.decimalPlaces, 1, 5);
-          draw_bar(&engine_rpm, 2, 1, 16);
+        if(true) {
+          draw_single_gauge(&engine_rpm);
         }
 
-        if(true) {
+        if(false) {
           draw_dual_gauge(&engine_clt, &engine_iat);
         }
 
@@ -523,6 +521,16 @@ void calculate_shift_light()
     }
   }
 
+}
+
+void draw_single_gauge(EngineVariable* gauge)
+{
+  char* gaugeLabel = gauge->shortLabel;
+  float gaugeValue = gauge->currentValue;
+  int gaugeDecimal = gauge->decimalPlaces;
+  writeToDisplay(gaugeLabel, 1, 1);
+  writeToDisplay(gaugeValue, gaugeDecimal, 1, 5);
+  draw_bar(gauge, 2, 1, 16);
 }
 
 void draw_dual_gauge(EngineVariable* gauge1, EngineVariable* gauge2)
