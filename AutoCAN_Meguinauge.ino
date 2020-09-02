@@ -6,7 +6,7 @@
 #define BLOCK 255 //block character to build bar graphs
 #define SPACE 32  //space character for start animation
 
-#define DEBUG false
+#define DEBUG true
 
 // CAN BUS OBJECTS //////////////////////////////////////////////
 
@@ -78,6 +78,9 @@ EngineVariable engine_lct   = {"LCT", 0.0, 0.0, 0.0, 50.0, 1, 0, 0, 0};       //
 
 unsigned long currentMillis = 0;
 unsigned long previousMillis = 0;
+unsigned long startPolling = 0;
+unsigned long endPolling = 0;
+int pollCount = 0;
 byte displayInterval = 100;
 unsigned long lastDisplayMillis = 0;
 unsigned int diagnosticInterval = 5000;
@@ -165,21 +168,25 @@ void setup() {
 
 void loop() {
 
-  load_from_can();
-  load_from_can();
-  load_from_can();
-  load_from_can();
-  load_from_can();
-  load_from_can();
-  load_from_can();
-  load_from_can();
-  load_from_can();
-  load_from_can();
+
+  startPolling = millis();
+  endPolling = startPolling;
+  pollCount = 0;
+  while(endPolling = millis() < startPolling + 200)
+  {
+    load_from_can();
+    pollCount++;
+  }
+
+  if(DEBUG)
+  {
+    Serial.print("polled load_from_can() ");
+    Serial.print(pollCount);
+    Serial.println(" times");
+  }
 
   previousMillis = currentMillis;
   currentMillis = millis();
-
-  Serial.println(currentMillis);
 
   //draw display
   if(true) {
