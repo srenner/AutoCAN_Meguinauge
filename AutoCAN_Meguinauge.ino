@@ -77,6 +77,7 @@ EngineVariable engine_lct   = {"LCT", 0.0, 0.0, 0.0, 50.0, 1, 0, 0, 0};       //
 // LOOP TIMER VARIABLES ///////////////////////////////
 
 unsigned long currentMillis = 0;
+unsigned long previousMillis = 0;
 byte displayInterval = 100;
 unsigned long lastDisplayMillis = 0;
 unsigned int diagnosticInterval = 5000;
@@ -155,69 +156,27 @@ void setup() {
   canInit(500000);                        // Initialise CAN port - must be before Serial.begin
   Serial.begin(1000000);
 
-  setCursorPosition(1,1);
-  writeToDisplay("Connected to ECU");
   if(DEBUG) {
     Serial.println("Connected to ECU");
   }
   clearDisplay();
-  delay(200);
   boot_animation();
 }
 
 void loop() {
 
-  Serial.println(millis());
   load_from_can();
-  Serial.println(millis());
   load_from_can();
-  Serial.println(millis());
   load_from_can();
-  Serial.println(millis());
   load_from_can();
-  Serial.println(millis());
+  load_from_can();
+  load_from_can();
+  load_from_can();
+  load_from_can();
+  load_from_can();
   load_from_can();
 
-
-
-  //int canID = load_from_can();
-
-  // bool got1512 = false;
-  // bool got1513 = false;
-  // bool got1514 = false;
-  // bool got1515 = false;
-  // bool got1516 = false;
-
-  // while(got1512 == false || got1513 == false || got1514 == false || got1515 == false || got1516 == false)
-  // {
-  //   int canID = load_from_can();
-  //   switch(canID) {
-  //     case 1512:
-  //       //if(got1512 == false) { Serial.println("1512"); }
-  //       got1512 = true;
-  //       break;
-  //     case 1513:
-  //       //if(got1513 == false) { Serial.println("1513"); }
-  //       got1513 = true;
-  //       break;
-  //     case 1514:
-  //       //if(got1514 == false) { Serial.println("1514"); }
-  //       got1514 = true;
-  //       break;
-  //     case 1515:
-  //       //if(got1515 == false) { Serial.println("1515"); }
-  //       got1515 = true;
-  //       break;
-  //     case 1516:
-  //       //if(got1516 == false) { Serial.println("1516"); }
-  //       got1516 = true;
-  //       break;
-  //   }
-  // }
-  // Serial.println("LOOP DONE");
-  
-
-
+  previousMillis = currentMillis;
   currentMillis = millis();
 
   Serial.println(currentMillis);
@@ -263,17 +222,11 @@ int load_from_can() {
   canMsg.dlc      = MESSAGE_LENGTH;
   canMsg.ctrl.rtr = MESSAGE_RTR;
 
-
-  
-
   // Wait for the command to be accepted by the controller
   while(can_cmd(&canMsg) != CAN_CMD_ACCEPTED);
   // Wait for command to finish executing
   while(can_get_status(&canMsg) == CAN_STATUS_NOT_COMPLETED);
   // Data is now available in the message object
-  
-
-  //serialPrintData(&canMsg);
 
   if(true)
   {
