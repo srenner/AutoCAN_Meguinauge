@@ -200,9 +200,19 @@ void loop() {
     if(currentMillis - lastDisplayMillis >= displayInterval && currentMillis > 500) {
       lastDisplayMillis = currentMillis;
 
-        writeToDisplay("RPM:");
-        writeToDisplay(engine_rpm.currentValue, engine_rpm.decimalPlaces, 1, 5);
-        draw_bar(engine_rpm, 2, 1, 16);
+        if(false) {
+          writeToDisplay("RPM:");
+          writeToDisplay(engine_rpm.currentValue, engine_rpm.decimalPlaces, 1, 5);
+          draw_bar(engine_rpm, 2, 1, 16);
+        }
+
+        writeToDisplay("CLT:");
+        writeToDisplay(engine_clt.currentValue, engine_clt.decimalPlaces, 1, 5);
+        draw_bar(engine_clt, 1, 9, 8);
+
+        writeToDisplay("IAT:", 2, 1);
+        writeToDisplay(engine_iat.currentValue, engine_iat.decimalPlaces, 2, 5);
+        draw_bar(engine_iat, 2, 9, 8);
 
         calculate_shift_light();
 
