@@ -168,7 +168,7 @@ void setup() {
     Serial.println("Connected to ECU");
   }
   clearDisplay();
-  boot_animation();
+  bootAnimation();
 }
 
 void loop() {
@@ -182,7 +182,7 @@ void loop() {
   while(pollCount < 100 && pollingDelay < 21)
   {
     startPolling = millis();
-    load_from_can();
+    loadFromCan();
     pollingDelay = millis() - startPolling;
     pollCount++;
   }
@@ -197,7 +197,7 @@ void loop() {
   if(DEBUG)
   {
     //Serial.println(pollingDelayLimit);
-    Serial.print("polled load_from_can() ");
+    Serial.print("polled loadFromCan() ");
     Serial.print(pollCount);
     Serial.println(" times");
   }
@@ -211,14 +211,14 @@ void loop() {
       lastDisplayMillis = currentMillis;
 
         if(true) {
-          draw_single_gauge(&engine_rpm);
+          drawSingleGauge(&engine_rpm);
         }
 
         if(false) {
-          draw_dual_gauge(&engine_clt, &engine_iat);
+          drawDualGauge(&engine_clt, &engine_iat);
         }
 
-        calculate_shift_light();
+        calculateShiftLight();
 
     }
   }
@@ -227,7 +227,7 @@ void loop() {
   if(false) {
     if(currentMillis - lastDiagnosticMillis >= diagnosticInterval && currentMillis > 500) {
       lastDiagnosticMillis = currentMillis;
-      bool err = calculate_error_light();
+      bool err = calculateErrorLight();
       if(err != inError) {
         inError = err;
         digitalWrite(LED_ERR, err);  
@@ -243,7 +243,7 @@ void resetCanVariables() {
   }
 }
 
-int load_from_can() {
+int loadFromCan() {
   clearBuffer(&canBuffer[0]);
   canMsg.cmd      = CMD_RX_DATA;
   canMsg.pt_data  = &canBuffer[0];
@@ -414,7 +414,7 @@ void increment_counter(EngineVariable* engine) {
 }
 
 //note: using log10 would work but this is faster
-bool is_current_value_shorter(EngineVariable engine) {
+bool isCurrentValueShorter(EngineVariable engine) {
   int roundedCurrent = round(engine.currentValue);
   int roundedPrevious = round(engine.previousValue);
   byte currentLength;
@@ -462,7 +462,7 @@ bool is_current_value_shorter(EngineVariable engine) {
   return currentLength < previousLength;
 }
 
-void draw_bar(EngineVariable* engineVar, int row, int column, int maxLength) {
+void drawBar(EngineVariable* engineVar, int row, int column, int maxLength) {
   
   int length = map(engineVar->currentValue, engineVar->minimum, engineVar->maximum, 0, maxLength);
 
@@ -476,7 +476,7 @@ void draw_bar(EngineVariable* engineVar, int row, int column, int maxLength) {
   }
 }
 
-bool calculate_error_light() {
+bool calculateErrorLight() {
   byte len = 20; //sizeof(allGauges);
   unsigned long badCount;
   unsigned long totalCount;
@@ -499,7 +499,7 @@ bool calculate_error_light() {
   return inError;
 }
 
-void calculate_shift_light()
+void calculateShiftLight()
 {
   previousShiftLight = shiftLight;
   shiftLight = (engine_rpm.currentValue + SHIFT_LIGHT_FROM_REDLINE) > engine_rpm.maximum;
@@ -523,34 +523,34 @@ void calculate_shift_light()
 
 }
 
-void draw_single_gauge(EngineVariable* gauge)
+void drawSingleGauge(EngineVariable* gauge)
 {
   char* gaugeLabel = gauge->shortLabel;
   float gaugeValue = gauge->currentValue;
   int gaugeDecimal = gauge->decimalPlaces;
   writeToDisplay(gaugeLabel, 1, 1);
   writeToDisplay(gaugeValue, gaugeDecimal, 1, 5);
-  draw_bar(gauge, 2, 1, 16);
+  drawBar(gauge, 2, 1, 16);
 }
 
-void draw_dual_gauge(EngineVariable* gauge1, EngineVariable* gauge2)
+void drawDualGauge(EngineVariable* gauge1, EngineVariable* gauge2)
 {
   char* gauge1Label = gauge1->shortLabel;
   float gauge1Value = gauge1->currentValue;
   int gauge1Decimal = gauge1->decimalPlaces;
   writeToDisplay(gauge1Label, 1, 1);
   writeToDisplay(gauge1Value, gauge1Decimal, 1, 5);
-  draw_bar(gauge1, 1, 9, 8);
+  drawBar(gauge1, 1, 9, 8);
 
   char* gauge2Label = gauge2->shortLabel;
   float gauge2Value = gauge2->currentValue;
   int gauge2Decimal = gauge2->decimalPlaces;
   writeToDisplay(gauge2Label, 2, 1);
   writeToDisplay(gauge2Value, gauge2Decimal, 2, 5);
-  draw_bar(gauge2, 2, 9, 8);
+  drawBar(gauge2, 2, 9, 8);
 }
 
-void boot_animation() {
+void bootAnimation() {
   int smallDelay = 30;
   int bigDelay = 200;
 
