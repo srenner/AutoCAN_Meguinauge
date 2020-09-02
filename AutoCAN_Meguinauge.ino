@@ -25,6 +25,13 @@ CanVariable can1514 = {1514, false, NULL};
 CanVariable can1515 = {1515, false, NULL};
 CanVariable can1516 = {1516, false, NULL};
 
+st_cmd_t canMsg;
+uint8_t canBuffer[8] = {};
+
+#define MESSAGE_PROTOCOL  0     // CAN protocol (0: CAN 2.0A, 1: CAN 2.0B)
+#define MESSAGE_LENGTH    8     // Data length: 8 bytes
+#define MESSAGE_RTR       0     // rtr bit
+
 
 // SET UP PINS //////////////////////////////////////////////////
 
@@ -109,14 +116,6 @@ unsigned long gaugeButtonMillis = 0;
 const byte DEBOUNCE_DELAY = 250;
 const byte SHIFT_LIGHT_FROM_REDLINE = 500;
 
-// CAN VARIABLES /////////////////////////////////////
-
-st_cmd_t canMsg;
-uint8_t canBuffer[8] = {};
-
-#define MESSAGE_PROTOCOL  0     // CAN protocol (0: CAN 2.0A, 1: CAN 2.0B)
-#define MESSAGE_LENGTH    8     // Data length: 8 bytes
-#define MESSAGE_RTR       0     // rtr bit
 
 void setup() {
 
