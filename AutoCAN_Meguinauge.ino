@@ -38,9 +38,9 @@ uint8_t canBuffer[8] = {};
 //This version of AltSoftSerial hard-codes the pins to 9 (rx) and 5(tx)
 //This also disables PWM on 6 and 7
 
-const byte LED_ERR = LED_BUILTIN;   // 'check engine' light
-const byte LED_SHIFT = 15;          // shift light
-const byte GAUGE_PIN = 18;          // pushbutton to cycle through modes
+const byte LED_ERR = 15;              // 'check engine' light
+const byte LED_SHIFT = LED_BUILTIN;   // shift light
+const byte GAUGE_PIN = 18;            // pushbutton to cycle through modes
 
 // BUILD ENGINE VARIABLES ///////////////////////////////////////
 
@@ -484,7 +484,7 @@ void calculate_shift_light()
 
   if(shiftLight == true && previousShiftLight == false)
   {
-    //turn on
+    digitalWrite(LED_SHIFT, HIGH);
     if(DEBUG)
     {
       Serial.println("Shift Light ON");
@@ -492,7 +492,7 @@ void calculate_shift_light()
   }
   else if(shiftLight == false && previousShiftLight == true)
   {
-    //turn off
+    digitalWrite(LED_SHIFT, LOW);
     if(DEBUG)
     {
       Serial.println("Shift Light OFF");
