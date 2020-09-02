@@ -91,6 +91,7 @@ unsigned long previousMillis = 0;
 unsigned long startPolling = 0;
 unsigned long endPolling = 0;
 unsigned int pollCount = 0;
+unsigned int maxPollingDelay = 0;
 byte displayInterval = 100;
 unsigned long lastDisplayMillis = 0;
 unsigned int diagnosticInterval = 5000;
@@ -173,10 +174,14 @@ void loop() {
 
   startPolling = millis();
   endPolling = startPolling;
+  int pollingDelay = 0;
   pollCount = 0;
-  while(pollCount < 100)
+  maxPollingDelay = 0;
+  while(pollCount < 100 && pollingDelay < 20)
   {
+    startPolling = millis();
     load_from_can();
+    pollingDelay = millis() - startPolling;
     pollCount++;
   }
 
