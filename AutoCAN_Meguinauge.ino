@@ -206,7 +206,7 @@ void loop() {
           draw_bar(engine_rpm, 2, 1, 16);
         }
 
-        writeToDisplay("CLT:");
+        writeToDisplay("CLT:", 1, 1);
         writeToDisplay(engine_clt.currentValue, engine_clt.decimalPlaces, 1, 5);
         draw_bar(engine_clt, 1, 9, 8);
 
