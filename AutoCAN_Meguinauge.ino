@@ -213,16 +213,12 @@ void loop() {
         if(false) {
           writeToDisplay("RPM:");
           writeToDisplay(engine_rpm.currentValue, engine_rpm.decimalPlaces, 1, 5);
-          draw_bar(engine_rpm, 2, 1, 16);
+          draw_bar(&engine_rpm, 2, 1, 16);
         }
 
-        writeToDisplay("CLT:", 1, 1);
-        writeToDisplay(engine_clt.currentValue, engine_clt.decimalPlaces, 1, 5);
-        draw_bar(engine_clt, 1, 9, 8);
-
-        writeToDisplay("IAT:", 2, 1);
-        writeToDisplay(engine_iat.currentValue, engine_iat.decimalPlaces, 2, 5);
-        draw_bar(engine_iat, 2, 9, 8);
+        if(true) {
+          draw_dual_gauge(&engine_clt, &engine_iat);
+        }
 
         calculate_shift_light();
 
@@ -261,6 +257,9 @@ int load_from_can() {
 
   // Wait for the command to be accepted by the controller
   while(can_cmd(&canMsg) != CAN_CMD_ACCEPTED);
+
+
+
   // Wait for command to finish executing
   while(can_get_status(&canMsg) == CAN_STATUS_NOT_COMPLETED);
   // Data is now available in the message object
@@ -465,9 +464,9 @@ bool is_current_value_shorter(EngineVariable engine) {
   return currentLength < previousLength;
 }
 
-void draw_bar(EngineVariable engineVar, int row, int column, int maxLength) {
+void draw_bar(EngineVariable* engineVar, int row, int column, int maxLength) {
   
-  int length = map(engineVar.currentValue, engineVar.minimum, engineVar.maximum, 0, maxLength);
+  int length = map(engineVar->currentValue, engineVar->minimum, engineVar->maximum, 0, maxLength);
 
   for(int i = 0; i < maxLength; i++) {
     if(i > length) {
@@ -526,13 +525,24 @@ void calculate_shift_light()
 
 }
 
-void draw()
+void draw_dual_gauge(EngineVariable* gauge1, EngineVariable* gauge2)
 {
+  char* gauge1Label = gauge1->shortLabel;
+  float gauge1Value = gauge1->currentValue;
+  int gauge1Decimal = gauge1->decimalPlaces;
+  writeToDisplay(gauge1Label, 1, 1);
+  writeToDisplay(gauge1Value, gauge1Decimal, 1, 5);
+  draw_bar(gauge1, 1, 9, 8);
 
+  char* gauge2Label = gauge2->shortLabel;
+  float gauge2Value = gauge2->currentValue;
+  int gauge2Decimal = gauge2->decimalPlaces;
+  writeToDisplay(gauge2Label, 2, 1);
+  writeToDisplay(gauge2Value, gauge2Decimal, 2, 5);
+  draw_bar(gauge2, 2, 9, 8);
 }
 
 void boot_animation() {
-
   int smallDelay = 30;
   int bigDelay = 200;
 
