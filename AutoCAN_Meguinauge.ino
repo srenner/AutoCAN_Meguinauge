@@ -81,6 +81,9 @@ EngineVariable engine_tcr   = {"TCR", 0.0, 0.0, 0.0, 50.0, 1, 0, 0, 0};       //
 EngineVariable engine_lct   = {"LCT", 0.0, 0.0, 0.0, 50.0, 1, 0, 0, 0};       //launch control timing
 #pragma endregion
 
+bool shiftLight = false;
+bool previousShiftLight = false;
+
 // LOOP TIMER VARIABLES ///////////////////////////////
 
 unsigned long currentMillis = 0;
@@ -195,6 +198,9 @@ void loop() {
         writeToDisplay("RPM:");
         writeToDisplay(engine_rpm.currentValue, engine_rpm.decimalPlaces, 1, 5);
         draw_bar(engine_rpm, 2, 1, 16);
+
+        calculate_shift_light();
+
     }
   }
 
@@ -469,6 +475,30 @@ bool calculate_error_light() {
     }
   }
   return inError;
+}
+
+void calculate_shift_light()
+{
+  previousShiftLight = shiftLight;
+  shiftLight = (engine_rpm.currentValue + SHIFT_LIGHT_FROM_REDLINE) > engine_rpm.maximum;
+
+  if(shiftLight == true && previousShiftLight == false)
+  {
+    //turn on
+    if(DEBUG)
+    {
+      Serial.println("Shift Light ON");
+    }
+  }
+  else if(shiftLight == false && previousShiftLight == true)
+  {
+    //turn off
+    if(DEBUG)
+    {
+      Serial.println("Shift Light OFF");
+    }
+  }
+
 }
 
 void boot_animation() {
