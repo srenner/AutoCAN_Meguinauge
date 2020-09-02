@@ -92,6 +92,7 @@ unsigned long startPolling = 0;
 unsigned long endPolling = 0;
 unsigned int pollCount = 0;
 unsigned int maxPollingDelay = 0;
+unsigned int pollingDelayLimit = 10;
 byte displayInterval = 100;
 unsigned long lastDisplayMillis = 0;
 unsigned int diagnosticInterval = 5000;
@@ -119,6 +120,7 @@ unsigned long gaugeButtonMillis = 0;
 
 const byte DEBOUNCE_DELAY = 250;
 const int SHIFT_LIGHT_FROM_REDLINE = 500;
+
 
 
 void setup() {
@@ -177,7 +179,7 @@ void loop() {
   int pollingDelay = 0;
   pollCount = 0;
   maxPollingDelay = 0;
-  while(pollCount < 100 && pollingDelay < 20)
+  while(pollCount < 100 && pollingDelay < 21)
   {
     startPolling = millis();
     load_from_can();
@@ -185,8 +187,16 @@ void loop() {
     pollCount++;
   }
 
+  // if(pollCount < 10) {
+  //   pollingDelayLimit = pollingDelayLimit + 1;
+  // }
+  // else if(pollCount > 45) {
+  //   pollingDelayLimit = pollingDelayLimit - 1;
+  // }
+
   if(DEBUG)
   {
+    //Serial.println(pollingDelayLimit);
     Serial.print("polled load_from_can() ");
     Serial.print(pollCount);
     Serial.println(" times");
@@ -513,6 +523,11 @@ void calculate_shift_light()
       Serial.println("Shift Light OFF");
     }
   }
+
+}
+
+void draw()
+{
 
 }
 
