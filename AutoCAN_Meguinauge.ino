@@ -301,19 +301,19 @@ int loadFromCan() {
     //processCanMessage(canMsg);
   }
   Serial.println(pollCount);
-  if(pollCount == 100 && DEBUG)
+  if(pollCount == 100)
   {
     Serial.println("=====");
     //delay(1); //attempt to adjust timing so the next execution will get all messages
+    digitalWrite(LED_BUILTIN, HIGH);
+    //not sure why, but serial port changes seems to "reset" the can bus timing to grab all messages
     Serial.end();
     Serial.begin(1000000);
   }
   else
   {
-    if(DEBUG)
-    {
+    digitalWrite(LED_BUILTIN, LOW);
     Serial.println("===============================");
-    }
   }
 
   unsigned long end = millis();
