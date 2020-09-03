@@ -123,6 +123,8 @@ unsigned long gaugeButtonMillis = 0;
 const byte DEBOUNCE_DELAY = 250;
 const int SHIFT_LIGHT_FROM_REDLINE = 500;
 
+void(* resetFunc) (void) = 0; //declare reset function @ address 0
+
 
 
 void setup() {
@@ -164,7 +166,7 @@ void setup() {
   
   writeToDisplay("Waiting for ECU");
   canInit(500000);                        // Initialise CAN port - must be before Serial.begin
-  //Serial.begin(1000000);
+  Serial.begin(1000000);
 
   if(DEBUG) {
     Serial.println("Connected to ECU");
@@ -193,7 +195,7 @@ void loop() {
           drawDualGauge(&engine_clt, &engine_iat);
         }
 
-        calculateShiftLight();
+        //calculateShiftLight();
 
     }
   }
@@ -306,10 +308,22 @@ int loadFromCan() {
     Serial.println("=====");
     digitalWrite(LED_BUILTIN, HIGH);
 
-    //not sure why, but re-init seems to "reset" the can bus timing to grab all messages
-    canInit(500000);
+    delay(1000); //for debugging
+
+    canMsg.cmd      = CMD_RX_DATA;
+    canMsg.ctrl.ide = MESSAGE_PROTOCOL; 
+    canMsg.dlc      = MESSAGE_LENGTH;
+    canMsg.ctrl.rtr = MESSAGE_RTR;
+    while(can_cmd(&canMsg) != CAN_CMD_ACCEPTED);
+
+
+    //not sure why, but re-init helps to "reset" the can bus timing to grab all messages
     Serial.end();
+    delay(3);
+    canInit(500000);
     Serial.begin(1000000);
+
+    //resetFunc();  //call reset
   }
   else
   {
