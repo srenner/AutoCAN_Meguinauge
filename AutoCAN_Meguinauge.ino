@@ -17,6 +17,8 @@ struct CanVariable
   byte data[8];
 };
 
+int canIDs[] = {1512,1513,1514,1515,1516};
+
 const byte CAN_MESSAGE_COUNT = 5;
 CanVariable* allCan[CAN_MESSAGE_COUNT];
 CanVariable can1512 = {1512, false, NULL};
@@ -162,7 +164,7 @@ void setup() {
   
   writeToDisplay("Waiting for ECU");
   canInit(500000);                        // Initialise CAN port - must be before Serial.begin
-  Serial.begin(1000000);
+  //Serial.begin(1000000);
 
   if(DEBUG) {
     Serial.println("Connected to ECU");
@@ -227,239 +229,208 @@ int loadFromCan() {
   canMsg.ctrl.rtr = MESSAGE_RTR;
 
   // Wait for the command to be accepted by the controller
-  while(can_cmd(&canMsg) != CAN_CMD_ACCEPTED);
+  //while(can_cmd(&canMsg) != CAN_CMD_ACCEPTED);
 
-  int bufferSize = 50;
-  st_cmd_t canBuffer[bufferSize];
 
   unsigned long start = millis();
-  for(int i = 0; i < bufferSize; i++) 
+
+
+  bool got1512 = false;
+  bool got1513 = false;
+  bool got1514 = false;
+  bool got1515 = false;
+  bool got1516 = false;
+
+  int pollCount = 0;
+  while((pollCount < 100) && (!got1512 || !got1513 || !got1514 || !got1515 || !got1516))
   {
+    pollCount++;
+    canMsg.cmd      = CMD_RX_DATA;
+    canMsg.ctrl.ide = MESSAGE_PROTOCOL; 
+    canMsg.dlc      = MESSAGE_LENGTH;
+    canMsg.ctrl.rtr = MESSAGE_RTR;
+    while(can_cmd(&canMsg) != CAN_CMD_ACCEPTED);
     while(can_get_status(&canMsg) == CAN_STATUS_NOT_COMPLETED);
-    canBuffer[i] = canMsg;
-    // if(i % 3 == 0)
-    // {
-    //   delay(1);
-    // }
+    switch(canMsg.id.std)
+    {
+      case 1512:
+        if(!got1512)
+        {
+          got1512 = true;
+          Serial.println("got1512");
+          processCanMessage(canMsg);
+        }
+        break;
+      case 1513:
+        if(!got1513)
+        {
+          got1513 = true;
+          Serial.println("got1513");
+          processCanMessage(canMsg);
+        }
+        break;
+      case 1514:
+        if(!got1514)
+        {
+          got1514 = true;
+          Serial.println("got1514");
+          processCanMessage(canMsg);
+        }
+        break;
+      case 1515:
+        if(!got1515)
+        {
+          got1515 = true;
+          Serial.println("got1515");
+          processCanMessage(canMsg);
+        }
+        break;
+      case 1516:
+        if(!got1516)
+        {
+          got1516 = true;
+          Serial.println("got1516");
+          processCanMessage(canMsg);
+        }
+        break;
+      default:
+        break;
+    }
+    
+    
+    //processCanMessage(canMsg);
   }
+  Serial.println(pollCount);
+  if(pollCount == 100 && DEBUG)
+  {
+    Serial.println("=====");
+    //delay(1); //attempt to adjust timing so the next execution will get all messages
+    Serial.end();
+    Serial.begin(1000000);
+  }
+  else
+  {
+    if(DEBUG)
+    {
+    Serial.println("===============================");
+    }
+  }
+
   unsigned long end = millis();
   unsigned long diff = end - start;
-  Serial.println(diff);
-
-  for(int i = 0; i < bufferSize; i++)
-  {
-    switch(canBuffer[i].id.std) {
-      case 1512:
-        engine_map.previousValue = engine_map.currentValue;
-        engine_map.currentValue = ((canBuffer[i].pt_data[0] * 256) + canBuffer[i].pt_data[1]) / 10.0;
-        increment_counter(&engine_map);
-
-        engine_rpm.previousValue = engine_rpm.currentValue;
-        //engine_rpm.currentValue = buf[2] * 256 + buf[3];
-        //round rpm to nearest 10
-        engine_rpm.currentValue = round((canBuffer[i].pt_data[2] * 256 + canBuffer[i].pt_data[3]) / 10.0) * 10.0;
-        increment_counter(&engine_rpm);
-        
-        engine_clt.previousValue = engine_clt.currentValue;
-        engine_clt.currentValue = (canBuffer[i].pt_data[4] * 256 + canBuffer[i].pt_data[5]) / 10.0;
-        increment_counter(&engine_clt);
-        
-        engine_tps.previousValue = engine_tps.currentValue;
-        engine_tps.currentValue = (canBuffer[i].pt_data[6] * 256 + canBuffer[i].pt_data[7]) / 10.0;
-        increment_counter(&engine_tps);
-        
-        break;
-      case 1513:
-        engine_pw1.previousValue = engine_pw1.currentValue;
-        engine_pw1.currentValue = (canBuffer[i].pt_data[0] * 256 + canBuffer[i].pt_data[1]) / 1000.0;
-        increment_counter(&engine_pw1);
-
-        engine_pw2.previousValue = engine_pw2.currentValue;
-        engine_pw2.currentValue = (canBuffer[i].pt_data[2] * 256 + canBuffer[i].pt_data[3]) / 1000.0;
-        increment_counter(&engine_pw2);
-
-        engine_iat.previousValue = engine_iat.currentValue;
-        engine_iat.currentValue = (canBuffer[i].pt_data[4] * 256 + canBuffer[i].pt_data[5]) / 10.0;
-        increment_counter(&engine_iat);
-
-        engine_adv.previousValue = engine_adv.currentValue;
-        engine_adv.currentValue = (canBuffer[i].pt_data[6] * 256 + canBuffer[i].pt_data[7]) / 10.0;
-        increment_counter(&engine_adv);
-        
-        break;
-      case 1514:
-        engine_tgt.previousValue = engine_tgt.currentValue;
-        engine_tgt.currentValue = (double)canBuffer[i].pt_data[0] / 10.0;
-        increment_counter(&engine_tgt);
-
-        engine_afr.previousValue = engine_afr.currentValue;
-        engine_afr.currentValue = (double)canBuffer[i].pt_data[1] / 10.0;
-        increment_counter(&engine_afr);
-
-        engine_ego.previousValue = engine_ego.currentValue;
-        engine_ego.currentValue = (canBuffer[i].pt_data[2] * 256 + canBuffer[i].pt_data[3]) / 10.0;
-        increment_counter(&engine_ego);
-
-        engine_egt.previousValue = engine_egt.currentValue;
-        engine_egt.currentValue = (canBuffer[i].pt_data[4] * 256 + canBuffer[i].pt_data[5]) / 10.0;
-        increment_counter(&engine_egt);
-
-        engine_pws.previousValue = engine_pws.currentValue;
-        engine_pws.currentValue = (canBuffer[i].pt_data[6] * 256 + canBuffer[i].pt_data[7]) / 1000.0;
-        increment_counter(&engine_pws);
-        
-        break;
-      case 1515:
-        engine_bat.previousValue = engine_bat.currentValue;
-        engine_bat.currentValue = (canBuffer[i].pt_data[0] * 256 + canBuffer[i].pt_data[1]) / 10.0;
-        increment_counter(&engine_bat);
-
-        //not tested
-        engine_sr1.previousValue = engine_sr1.currentValue;
-        engine_sr1.currentValue = (canBuffer[i].pt_data[2] * 256 + canBuffer[i].pt_data[3]) / 10.0;
-        increment_counter(&engine_sr1);
-
-        //not tested
-        engine_sr2.previousValue = engine_sr2.currentValue;
-        engine_sr2.currentValue = (canBuffer[i].pt_data[4] * 256 + canBuffer[i].pt_data[5]) / 10.0;
-        increment_counter(&engine_sr2);
-
-        //not tested
-        engine_knk.previousValue = engine_knk.currentValue;
-        engine_knk.currentValue = (canBuffer[i].pt_data[6] * 256) / 10.0;
-        increment_counter(&engine_knk);
-
-        break;
-      case 1516:
-        //not tested
-        engine_vss.previousValue = engine_vss.currentValue;
-        engine_vss.currentValue = (canBuffer[i].pt_data[0] * 256 + canBuffer[i].pt_data[1]) / 10.0;
-        increment_counter(&engine_vss);
-
-        //not tested
-        engine_tcr.previousValue = engine_tcr.currentValue;
-        engine_tcr.currentValue = (canBuffer[i].pt_data[2] * 256 + canBuffer[i].pt_data[3]) / 10.0;
-        increment_counter(&engine_tcr);
-
-        engine_lct.previousValue = engine_lct.currentValue;
-        engine_lct.previousValue = (canBuffer[i].pt_data[4] * 256 + canBuffer[i].pt_data[5]) / 10.0;
-        increment_counter(&engine_lct);
-        
-        break;
-      default:
-        //do nothing
-        break;
-    }
-  }
+  //Serial.println(diff);
 
 
-  if(false)
-  {
-    switch(canMsg.id.std) {
-      case 1512:
-        engine_map.previousValue = engine_map.currentValue;
-        engine_map.currentValue = ((canMsg.pt_data[0] * 256) + canMsg.pt_data[1]) / 10.0;
-        increment_counter(&engine_map);
-
-        engine_rpm.previousValue = engine_rpm.currentValue;
-        //engine_rpm.currentValue = buf[2] * 256 + buf[3];
-        //round rpm to nearest 10
-        engine_rpm.currentValue = round((canMsg.pt_data[2] * 256 + canMsg.pt_data[3]) / 10.0) * 10.0;
-        increment_counter(&engine_rpm);
-        
-        engine_clt.previousValue = engine_clt.currentValue;
-        engine_clt.currentValue = (canMsg.pt_data[4] * 256 + canMsg.pt_data[5]) / 10.0;
-        increment_counter(&engine_clt);
-        
-        engine_tps.previousValue = engine_tps.currentValue;
-        engine_tps.currentValue = (canMsg.pt_data[6] * 256 + canMsg.pt_data[7]) / 10.0;
-        increment_counter(&engine_tps);
-        
-        break;
-      case 1513:
-        engine_pw1.previousValue = engine_pw1.currentValue;
-        engine_pw1.currentValue = (canMsg.pt_data[0] * 256 + canMsg.pt_data[1]) / 1000.0;
-        increment_counter(&engine_pw1);
-
-        engine_pw2.previousValue = engine_pw2.currentValue;
-        engine_pw2.currentValue = (canMsg.pt_data[2] * 256 + canMsg.pt_data[3]) / 1000.0;
-        increment_counter(&engine_pw2);
-
-        engine_iat.previousValue = engine_iat.currentValue;
-        engine_iat.currentValue = (canMsg.pt_data[4] * 256 + canMsg.pt_data[5]) / 10.0;
-        increment_counter(&engine_iat);
-
-        engine_adv.previousValue = engine_adv.currentValue;
-        engine_adv.currentValue = (canMsg.pt_data[6] * 256 + canMsg.pt_data[7]) / 10.0;
-        increment_counter(&engine_adv);
-        
-        break;
-      case 1514:
-        engine_tgt.previousValue = engine_tgt.currentValue;
-        engine_tgt.currentValue = (double)canMsg.pt_data[0] / 10.0;
-        increment_counter(&engine_tgt);
-
-        engine_afr.previousValue = engine_afr.currentValue;
-        engine_afr.currentValue = (double)canMsg.pt_data[1] / 10.0;
-        increment_counter(&engine_afr);
-
-        engine_ego.previousValue = engine_ego.currentValue;
-        engine_ego.currentValue = (canMsg.pt_data[2] * 256 + canMsg.pt_data[3]) / 10.0;
-        increment_counter(&engine_ego);
-
-        engine_egt.previousValue = engine_egt.currentValue;
-        engine_egt.currentValue = (canMsg.pt_data[4] * 256 + canMsg.pt_data[5]) / 10.0;
-        increment_counter(&engine_egt);
-
-        engine_pws.previousValue = engine_pws.currentValue;
-        engine_pws.currentValue = (canMsg.pt_data[6] * 256 + canMsg.pt_data[7]) / 1000.0;
-        increment_counter(&engine_pws);
-        
-        break;
-      case 1515:
-        engine_bat.previousValue = engine_bat.currentValue;
-        engine_bat.currentValue = (canMsg.pt_data[0] * 256 + canMsg.pt_data[1]) / 10.0;
-        increment_counter(&engine_bat);
-
-        //not tested
-        engine_sr1.previousValue = engine_sr1.currentValue;
-        engine_sr1.currentValue = (canMsg.pt_data[2] * 256 + canMsg.pt_data[3]) / 10.0;
-        increment_counter(&engine_sr1);
-
-        //not tested
-        engine_sr2.previousValue = engine_sr2.currentValue;
-        engine_sr2.currentValue = (canMsg.pt_data[4] * 256 + canMsg.pt_data[5]) / 10.0;
-        increment_counter(&engine_sr2);
-
-        //not tested
-        engine_knk.previousValue = engine_knk.currentValue;
-        engine_knk.currentValue = (canMsg.pt_data[6] * 256) / 10.0;
-        increment_counter(&engine_knk);
-
-        break;
-      case 1516:
-        //not tested
-        engine_vss.previousValue = engine_vss.currentValue;
-        engine_vss.currentValue = (canMsg.pt_data[0] * 256 + canMsg.pt_data[1]) / 10.0;
-        increment_counter(&engine_vss);
-
-        //not tested
-        engine_tcr.previousValue = engine_tcr.currentValue;
-        engine_tcr.currentValue = (canMsg.pt_data[2] * 256 + canMsg.pt_data[3]) / 10.0;
-        increment_counter(&engine_tcr);
-
-        engine_lct.previousValue = engine_lct.currentValue;
-        engine_lct.previousValue = (canMsg.pt_data[4] * 256 + canMsg.pt_data[5]) / 10.0;
-        increment_counter(&engine_lct);
-        
-        break;
-      default:
-        //do nothing
-        break;
-    }
-  }
-  return canMsg.id.std;
+  return 0;
 }
+
+void processCanMessage(st_cmd_t msg)
+{
+      switch(msg.id.std) {
+      case 1512:
+        engine_map.previousValue = engine_map.currentValue;
+        engine_map.currentValue = ((msg.pt_data[0] * 256) + msg.pt_data[1]) / 10.0;
+        increment_counter(&engine_map);
+
+        engine_rpm.previousValue = engine_rpm.currentValue;
+        //engine_rpm.currentValue = buf[2] * 256 + buf[3];
+        //round rpm to nearest 10
+        engine_rpm.currentValue = round((msg.pt_data[2] * 256 + msg.pt_data[3]) / 10.0) * 10.0;
+        increment_counter(&engine_rpm);
+        
+        engine_clt.previousValue = engine_clt.currentValue;
+        engine_clt.currentValue = (msg.pt_data[4] * 256 + msg.pt_data[5]) / 10.0;
+        increment_counter(&engine_clt);
+        
+        engine_tps.previousValue = engine_tps.currentValue;
+        engine_tps.currentValue = (msg.pt_data[6] * 256 + msg.pt_data[7]) / 10.0;
+        increment_counter(&engine_tps);
+        
+        break;
+      case 1513:
+        engine_pw1.previousValue = engine_pw1.currentValue;
+        engine_pw1.currentValue = (msg.pt_data[0] * 256 + msg.pt_data[1]) / 1000.0;
+        increment_counter(&engine_pw1);
+
+        engine_pw2.previousValue = engine_pw2.currentValue;
+        engine_pw2.currentValue = (msg.pt_data[2] * 256 + msg.pt_data[3]) / 1000.0;
+        increment_counter(&engine_pw2);
+
+        engine_iat.previousValue = engine_iat.currentValue;
+        engine_iat.currentValue = (msg.pt_data[4] * 256 + msg.pt_data[5]) / 10.0;
+        increment_counter(&engine_iat);
+
+        engine_adv.previousValue = engine_adv.currentValue;
+        engine_adv.currentValue = (msg.pt_data[6] * 256 + msg.pt_data[7]) / 10.0;
+        increment_counter(&engine_adv);
+        
+        break;
+      case 1514:
+        engine_tgt.previousValue = engine_tgt.currentValue;
+        engine_tgt.currentValue = (double)msg.pt_data[0] / 10.0;
+        increment_counter(&engine_tgt);
+
+        engine_afr.previousValue = engine_afr.currentValue;
+        engine_afr.currentValue = (double)msg.pt_data[1] / 10.0;
+        increment_counter(&engine_afr);
+
+        engine_ego.previousValue = engine_ego.currentValue;
+        engine_ego.currentValue = (msg.pt_data[2] * 256 + msg.pt_data[3]) / 10.0;
+        increment_counter(&engine_ego);
+
+        engine_egt.previousValue = engine_egt.currentValue;
+        engine_egt.currentValue = (msg.pt_data[4] * 256 + msg.pt_data[5]) / 10.0;
+        increment_counter(&engine_egt);
+
+        engine_pws.previousValue = engine_pws.currentValue;
+        engine_pws.currentValue = (msg.pt_data[6] * 256 + msg.pt_data[7]) / 1000.0;
+        increment_counter(&engine_pws);
+        
+        break;
+      case 1515:
+        engine_bat.previousValue = engine_bat.currentValue;
+        engine_bat.currentValue = (msg.pt_data[0] * 256 + msg.pt_data[1]) / 10.0;
+        increment_counter(&engine_bat);
+
+        //not tested
+        engine_sr1.previousValue = engine_sr1.currentValue;
+        engine_sr1.currentValue = (msg.pt_data[2] * 256 + msg.pt_data[3]) / 10.0;
+        increment_counter(&engine_sr1);
+
+        //not tested
+        engine_sr2.previousValue = engine_sr2.currentValue;
+        engine_sr2.currentValue = (msg.pt_data[4] * 256 + msg.pt_data[5]) / 10.0;
+        increment_counter(&engine_sr2);
+
+        //not tested
+        engine_knk.previousValue = engine_knk.currentValue;
+        engine_knk.currentValue = (msg.pt_data[6] * 256) / 10.0;
+        increment_counter(&engine_knk);
+
+        break;
+      case 1516:
+        //not tested
+        engine_vss.previousValue = engine_vss.currentValue;
+        engine_vss.currentValue = (msg.pt_data[0] * 256 + msg.pt_data[1]) / 10.0;
+        increment_counter(&engine_vss);
+
+        //not tested
+        engine_tcr.previousValue = engine_tcr.currentValue;
+        engine_tcr.currentValue = (msg.pt_data[2] * 256 + msg.pt_data[3]) / 10.0;
+        increment_counter(&engine_tcr);
+
+        engine_lct.previousValue = engine_lct.currentValue;
+        engine_lct.previousValue = (msg.pt_data[4] * 256 + msg.pt_data[5]) / 10.0;
+        increment_counter(&engine_lct);
+        
+        break;
+      default:
+        //do nothing
+        break;
+    }
+
+}
+
 
 void serialPrintData(st_cmd_t *msg){
   char textBuffer[50] = {0};
