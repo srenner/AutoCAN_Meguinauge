@@ -173,34 +173,7 @@ void setup() {
 
 void loop() {
 
-
-  startPolling = millis();
-  endPolling = startPolling;
-  int pollingDelay = 0;
-  pollCount = 0;
-  maxPollingDelay = 0;
-  while(pollCount < 100 && pollingDelay < 21)
-  {
-    startPolling = millis();
-    loadFromCan();
-    pollingDelay = millis() - startPolling;
-    pollCount++;
-  }
-
-  // if(pollCount < 10) {
-  //   pollingDelayLimit = pollingDelayLimit + 1;
-  // }
-  // else if(pollCount > 45) {
-  //   pollingDelayLimit = pollingDelayLimit - 1;
-  // }
-
-  if(DEBUG)
-  {
-    //Serial.println(pollingDelayLimit);
-    Serial.print("polled loadFromCan() ");
-    Serial.print(pollCount);
-    Serial.println(" times");
-  }
+  loadFromCan();
 
   previousMillis = currentMillis;
   currentMillis = millis();
@@ -210,11 +183,11 @@ void loop() {
     if(currentMillis - lastDisplayMillis >= displayInterval && currentMillis > 500) {
       lastDisplayMillis = currentMillis;
 
-        if(true) {
+        if(false) {
           drawSingleGauge(&engine_rpm);
         }
 
-        if(false) {
+        if(true) {
           drawDualGauge(&engine_clt, &engine_iat);
         }
 
@@ -256,13 +229,131 @@ int loadFromCan() {
   // Wait for the command to be accepted by the controller
   while(can_cmd(&canMsg) != CAN_CMD_ACCEPTED);
 
+  int bufferSize = 50;
+  st_cmd_t canBuffer[bufferSize];
+
+  unsigned long start = millis();
+  for(int i = 0; i < bufferSize; i++) 
+  {
+    while(can_get_status(&canMsg) == CAN_STATUS_NOT_COMPLETED);
+    canBuffer[i] = canMsg;
+    // if(i % 3 == 0)
+    // {
+    //   delay(1);
+    // }
+  }
+  unsigned long end = millis();
+  unsigned long diff = end - start;
+  Serial.println(diff);
+
+  for(int i = 0; i < bufferSize; i++)
+  {
+    switch(canBuffer[i].id.std) {
+      case 1512:
+        engine_map.previousValue = engine_map.currentValue;
+        engine_map.currentValue = ((canBuffer[i].pt_data[0] * 256) + canBuffer[i].pt_data[1]) / 10.0;
+        increment_counter(&engine_map);
+
+        engine_rpm.previousValue = engine_rpm.currentValue;
+        //engine_rpm.currentValue = buf[2] * 256 + buf[3];
+        //round rpm to nearest 10
+        engine_rpm.currentValue = round((canBuffer[i].pt_data[2] * 256 + canBuffer[i].pt_data[3]) / 10.0) * 10.0;
+        increment_counter(&engine_rpm);
+        
+        engine_clt.previousValue = engine_clt.currentValue;
+        engine_clt.currentValue = (canBuffer[i].pt_data[4] * 256 + canBuffer[i].pt_data[5]) / 10.0;
+        increment_counter(&engine_clt);
+        
+        engine_tps.previousValue = engine_tps.currentValue;
+        engine_tps.currentValue = (canBuffer[i].pt_data[6] * 256 + canBuffer[i].pt_data[7]) / 10.0;
+        increment_counter(&engine_tps);
+        
+        break;
+      case 1513:
+        engine_pw1.previousValue = engine_pw1.currentValue;
+        engine_pw1.currentValue = (canBuffer[i].pt_data[0] * 256 + canBuffer[i].pt_data[1]) / 1000.0;
+        increment_counter(&engine_pw1);
+
+        engine_pw2.previousValue = engine_pw2.currentValue;
+        engine_pw2.currentValue = (canBuffer[i].pt_data[2] * 256 + canBuffer[i].pt_data[3]) / 1000.0;
+        increment_counter(&engine_pw2);
+
+        engine_iat.previousValue = engine_iat.currentValue;
+        engine_iat.currentValue = (canBuffer[i].pt_data[4] * 256 + canBuffer[i].pt_data[5]) / 10.0;
+        increment_counter(&engine_iat);
+
+        engine_adv.previousValue = engine_adv.currentValue;
+        engine_adv.currentValue = (canBuffer[i].pt_data[6] * 256 + canBuffer[i].pt_data[7]) / 10.0;
+        increment_counter(&engine_adv);
+        
+        break;
+      case 1514:
+        engine_tgt.previousValue = engine_tgt.currentValue;
+        engine_tgt.currentValue = (double)canBuffer[i].pt_data[0] / 10.0;
+        increment_counter(&engine_tgt);
+
+        engine_afr.previousValue = engine_afr.currentValue;
+        engine_afr.currentValue = (double)canBuffer[i].pt_data[1] / 10.0;
+        increment_counter(&engine_afr);
+
+        engine_ego.previousValue = engine_ego.currentValue;
+        engine_ego.currentValue = (canBuffer[i].pt_data[2] * 256 + canBuffer[i].pt_data[3]) / 10.0;
+        increment_counter(&engine_ego);
+
+        engine_egt.previousValue = engine_egt.currentValue;
+        engine_egt.currentValue = (canBuffer[i].pt_data[4] * 256 + canBuffer[i].pt_data[5]) / 10.0;
+        increment_counter(&engine_egt);
+
+        engine_pws.previousValue = engine_pws.currentValue;
+        engine_pws.currentValue = (canBuffer[i].pt_data[6] * 256 + canBuffer[i].pt_data[7]) / 1000.0;
+        increment_counter(&engine_pws);
+        
+        break;
+      case 1515:
+        engine_bat.previousValue = engine_bat.currentValue;
+        engine_bat.currentValue = (canBuffer[i].pt_data[0] * 256 + canBuffer[i].pt_data[1]) / 10.0;
+        increment_counter(&engine_bat);
+
+        //not tested
+        engine_sr1.previousValue = engine_sr1.currentValue;
+        engine_sr1.currentValue = (canBuffer[i].pt_data[2] * 256 + canBuffer[i].pt_data[3]) / 10.0;
+        increment_counter(&engine_sr1);
+
+        //not tested
+        engine_sr2.previousValue = engine_sr2.currentValue;
+        engine_sr2.currentValue = (canBuffer[i].pt_data[4] * 256 + canBuffer[i].pt_data[5]) / 10.0;
+        increment_counter(&engine_sr2);
+
+        //not tested
+        engine_knk.previousValue = engine_knk.currentValue;
+        engine_knk.currentValue = (canBuffer[i].pt_data[6] * 256) / 10.0;
+        increment_counter(&engine_knk);
+
+        break;
+      case 1516:
+        //not tested
+        engine_vss.previousValue = engine_vss.currentValue;
+        engine_vss.currentValue = (canBuffer[i].pt_data[0] * 256 + canBuffer[i].pt_data[1]) / 10.0;
+        increment_counter(&engine_vss);
+
+        //not tested
+        engine_tcr.previousValue = engine_tcr.currentValue;
+        engine_tcr.currentValue = (canBuffer[i].pt_data[2] * 256 + canBuffer[i].pt_data[3]) / 10.0;
+        increment_counter(&engine_tcr);
+
+        engine_lct.previousValue = engine_lct.currentValue;
+        engine_lct.previousValue = (canBuffer[i].pt_data[4] * 256 + canBuffer[i].pt_data[5]) / 10.0;
+        increment_counter(&engine_lct);
+        
+        break;
+      default:
+        //do nothing
+        break;
+    }
+  }
 
 
-  // Wait for command to finish executing
-  while(can_get_status(&canMsg) == CAN_STATUS_NOT_COMPLETED);
-  // Data is now available in the message object
-
-  if(true)
+  if(false)
   {
     switch(canMsg.id.std) {
       case 1512:
