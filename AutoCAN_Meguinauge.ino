@@ -304,9 +304,10 @@ int loadFromCan() {
   if(pollCount == 100)
   {
     Serial.println("=====");
-    //delay(1); //attempt to adjust timing so the next execution will get all messages
     digitalWrite(LED_BUILTIN, HIGH);
-    //not sure why, but serial port changes seems to "reset" the can bus timing to grab all messages
+
+    //not sure why, but re-init seems to "reset" the can bus timing to grab all messages
+    canInit(500000);
     Serial.end();
     Serial.begin(1000000);
   }
