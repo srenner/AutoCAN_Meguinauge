@@ -307,23 +307,12 @@ int loadFromCan() {
   {
     Serial.println("=====");
     digitalWrite(LED_BUILTIN, HIGH);
+    
+    writeToDisplay("CAN BUS ERROR");
+    delay(1000);
+    //resetFunc();
+    
 
-    delay(1000); //for debugging
-
-    canMsg.cmd      = CMD_RX_DATA;
-    canMsg.ctrl.ide = MESSAGE_PROTOCOL; 
-    canMsg.dlc      = MESSAGE_LENGTH;
-    canMsg.ctrl.rtr = MESSAGE_RTR;
-    while(can_cmd(&canMsg) != CAN_CMD_ACCEPTED);
-
-
-    //not sure why, but re-init helps to "reset" the can bus timing to grab all messages
-    Serial.end();
-    delay(3);
-    canInit(500000);
-    Serial.begin(1000000);
-
-    //resetFunc();  //call reset
   }
   else
   {
