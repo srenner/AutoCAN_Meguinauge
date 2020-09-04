@@ -3,10 +3,22 @@
 #include <ASTCanLib.h>
 #include <math.h>
 
-#define BLOCK 255 //block character to build bar graphs
-#define SPACE 32  //space character for start animation
+/*
+  CONFIGURATION NOTES
+  ===================
+  - setting DEBUG true outputs messages to the serial port
+  - define BLOCK as whichever ASCII character you want to use in the bar graphs
+  - define SYSTEM_MESSAGE_ID as a message id you want to send on your CAN bus
+*/
+
+
 
 #define DEBUG true
+
+#define BLOCK 255             //block character to build bar graphs
+#define SPACE 32              //space character for start animation
+#define SYSTEM_MESSAGE_ID 411
+
 
 // CAN BUS OBJECTS //////////////////////////////////////////////
 
@@ -102,17 +114,40 @@ unsigned long lastDiagnosticMillis = 0;
 
 // MODE VARIABLES ////////////////////////////////////
 
-enum Mode {
+enum DisplayType {
+  warmup,
+  runtime,
   single,
   dual,
-  sensor_warmup,
-  engine_warmup,
-  diag
+  diagnostic
 };
-Mode currentMode;
 
-bool dualModeReady = false;
-bool diagModeReady = false;
+struct Display
+{
+  DisplayType type;
+  EngineVariable gauge1;
+  EngineVariable gauge2;
+};
+
+const byte DISPLAY_COUNT = 16;
+Display* allDisplays[DISPLAY_COUNT];
+Display display_warmup    = {warmup, NULL, NULL};
+Display display_runtime   = {runtime, NULL, NULL};
+Display display_clt_iat   = {dual, engine_clt, engine_iat};
+Display display_afr_tgt   = {dual, engine_afr, engine_tgt};
+Display display_afr_map   = {dual, engine_afr, engine_map};
+Display display_afr_ego   = {dual, engine_afr, engine_ego};
+Display display_vss_rpm   = {dual, engine_vss, engine_rpm};
+Display display_rpm_bat   = {dual, engine_rpm, engine_bat};
+Display display_bat       = {single, engine_bat, NULL};
+Display display_clt       = {single, engine_clt, NULL};
+Display display_iat       = {single, engine_iat, NULL};
+Display display_afr       = {single, engine_afr, NULL};
+Display display_map       = {single, engine_map, NULL};
+Display display_adv       = {single, engine_adv, NULL};
+Display display_tps       = {single, engine_tps, NULL};
+Display display_pw1       = {single, engine_pw1, NULL};
+
 
 bool inError = false;
 
@@ -164,6 +199,27 @@ void setup() {
   allGauges[19] = &engine_lct;
   #pragma endregion
   
+  #pragma region set all displays
+
+  allDisplays[0] = &display_warmup;
+  allDisplays[1] = &display_runtime;
+  allDisplays[2] = &display_clt_iat;
+  allDisplays[3] = &display_afr_tgt;
+  allDisplays[4] = &display_afr_map;
+  allDisplays[5] = &display_afr_ego;
+  allDisplays[6] = &display_vss_rpm;
+  allDisplays[7] = &display_rpm_bat;
+  allDisplays[8] = &display_bat;
+  allDisplays[9] = &display_clt;
+  allDisplays[10] = &display_iat;
+  allDisplays[11] = &display_afr;
+  allDisplays[12] = &display_map;
+  allDisplays[13] = &display_adv;
+  allDisplays[14] = &display_tps;
+  allDisplays[15] = &display_pw1;
+
+  #pragma endregion
+
   writeToDisplay("Waiting for ECU");
   canInit(500000);                        // Initialise CAN port - must be before Serial.begin
   Serial.begin(1000000);
@@ -181,6 +237,27 @@ void loop() {
 
   previousMillis = currentMillis;
   currentMillis = millis();
+
+
+
+
+  previousModeButton = currentModeButton;
+  currentModeButton = digitalRead(MODE_PIN);
+  if(currentModeButton != previousModeButton) {
+    if(currentModeButton == 0) {
+      modeButtonMillis = currentMillis;
+      nextDisplay();
+    }
+    else {
+      if((currentMillis - modeButtonMillis) < DEBOUNCE_DELAY) {
+        currentModeButton = 0;
+      }
+    }
+  }
+
+
+
+
 
   //draw display
   if(true) {
@@ -211,6 +288,11 @@ void loop() {
       }
     }
   }
+}
+
+void nextDisplay() 
+{
+
 }
 
 void resetCanVariables() {
