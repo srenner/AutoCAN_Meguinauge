@@ -2,6 +2,7 @@
 #include "Can485DisplayHelper.h"
 #include <ASTCanLib.h>
 #include <math.h>
+#include "AutoCAN.h"
 
 /*
   CONFIGURATION NOTES
@@ -221,7 +222,7 @@ void setup() {
   Serial.begin(1000000);
 
   if(DEBUG) {
-    Serial.println("CAN bus ");
+    Serial.println("CAN bus");
   }
   clearDisplay();
   bootAnimation();
@@ -258,20 +259,12 @@ void loop() {
     }
   }
 
-
-
-
-
   //draw display
   if(true) {
     if(currentMillis - lastDisplayMillis >= displayInterval && currentMillis > 500) {
       lastDisplayMillis = currentMillis;
-
-        //drawDualGauge(&engine_clt, &engine_iat);
-
         drawDisplay();
         calculateShiftLight();
-
     }
   }
 
@@ -300,7 +293,6 @@ void nextDisplay()
   {
     currentDisplayIndex = 0;
   }
-  //drawDisplay();
 }
 
 void drawDisplay()
