@@ -11,13 +11,10 @@
   - define SYSTEM_MESSAGE_ID as a message id you want to send on your CAN bus
 */
 
-
-
-#define DEBUG true
-
-#define BLOCK 255             //block character to build bar graphs
-#define SPACE 32              //space character for start animation
-#define SYSTEM_MESSAGE_ID 411
+#define DEBUG true              //print out debug messages on serial port
+#define BLOCK 255               //block character to build bar graphs
+#define SPACE 32                //space character for start animation
+#define SYSTEM_MESSAGE_ID 411   //message id on can bus
 
 
 // CAN BUS OBJECTS //////////////////////////////////////////////
@@ -86,7 +83,7 @@ EngineVariable engine_afr   = {"AFR", 0.0, 0.0, 10.0, 20.0, 1, 0, 0, 0};      //
 EngineVariable engine_ego   = {"EGO", 0.0, 0.0, 70.0, 130.0, 0, 0, 0, 0};     //ego correction %
 EngineVariable engine_egt   = {"EGT", 0.0, 0.0, 0.0, 2000.0, 0, 0, 0, 0};     //exhaust gas temp
 EngineVariable engine_pws   = {"PWS", 0.0, 0.0, 0.0, 20.0, 2, 0, 0, 0};       //injector pulse width sequential
-EngineVariable engine_bat   = {"BAT", 0.0, 0.0, 8.0, 18.0, 1, 0, 0, 0};       //battery voltage
+EngineVariable engine_bat   = {"BAT", 0.0, 0.0, 11.0, 15.0, 1, 0, 0, 0};       //battery voltage
 EngineVariable engine_sr1   = {"SR1", 0.0, 0.0, 0.0, 999.0, 1, 0, 0, 0};      //generic sensor 1
 EngineVariable engine_sr2   = {"SR2", 0.0, 0.0, 0.0, 999.0, 1, 0, 0, 0};      //generic sensor 2
 EngineVariable engine_knk   = {"KNK", 0.0, 0.0, 0.0, 50.0, 1, 0, 0, 0};       //knock ignition retard
@@ -156,14 +153,10 @@ Display display_pw1       = {single, &engine_pw1, NULL};
 
 bool inError = false;
 
-
-
 const byte DEBOUNCE_DELAY = 250;
 const int SHIFT_LIGHT_FROM_REDLINE = 500;
 
-void(* resetFunc) (void) = 0; //declare reset function @ address 0
-
-
+void(* resetFunc) (void) = 0; //declare killswitch function
 
 void setup() {
 
@@ -223,12 +216,12 @@ void setup() {
 
   #pragma endregion
 
-  writeToDisplay("Waiting for CAN bus");
+  writeToDisplay("Wait for CAN bus");
   canInit(500000);                        // Initialise CAN port - must be before Serial.begin
   Serial.begin(1000000);
 
   if(DEBUG) {
-    Serial.println("Connected to CAN bus");
+    Serial.println("CAN bus ");
   }
   clearDisplay();
   bootAnimation();
