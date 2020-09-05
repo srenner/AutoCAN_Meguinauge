@@ -130,7 +130,7 @@ struct Display
 };
 
 const byte DISPLAY_COUNT = 16;
-byte currentDisplayIndex = -1;
+byte currentDisplayIndex = 0;
 Display* allDisplays[DISPLAY_COUNT];
 Display display_warmup    = {warmup, NULL, NULL};
 Display display_runtime   = {runtime, NULL, NULL};
@@ -232,11 +232,6 @@ void loop() {
 
   previousMillis = currentMillis;
   currentMillis = millis();
-
-  if(currentDisplayIndex == -1)
-  {
-    nextDisplay();
-  }
 
   previousButtonValue = currentButtonValue;
   currentButtonValue = digitalRead(BUTTON_PIN);
