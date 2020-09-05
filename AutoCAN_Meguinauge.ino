@@ -54,7 +54,7 @@ uint8_t canBuffer[8] = {};
 
 const byte LED_ERR = 15;              // 'check engine' light
 const byte LED_SHIFT = LED_BUILTIN;   // shift light
-const byte GAUGE_PIN = 18;            // pushbutton to cycle through modes
+const byte BUTTON_PIN = 10;            // pushbutton to cycle through modes
 
 // BUILD ENGINE VARIABLES ///////////////////////////////////////
 
@@ -97,6 +97,10 @@ EngineVariable engine_lct   = {"LCT", 0.0, 0.0, 0.0, 50.0, 1, 0, 0, 0};       //
 
 bool shiftLight = false;
 bool previousShiftLight = false;
+
+bool currentButtonValue = 1;
+bool previousButtonValue = 1;
+unsigned long buttonMillis = 0;
 
 // LOOP TIMER VARIABLES ///////////////////////////////
 
@@ -151,9 +155,7 @@ Display display_pw1       = {single, engine_pw1, NULL};
 
 bool inError = false;
 
-bool currentGaugeButton = 1;
-bool previousGaugeButton = 1;
-unsigned long gaugeButtonMillis = 0;
+
 
 const byte DEBOUNCE_DELAY = 250;
 const int SHIFT_LIGHT_FROM_REDLINE = 500;
@@ -168,7 +170,7 @@ void setup() {
 
   pinMode(LED_ERR, OUTPUT);
   pinMode(LED_SHIFT, OUTPUT);
-  pinMode(GAUGE_PIN, INPUT_PULLUP);
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
   
   allCan[0] = &can1512;
   allCan[1] = &can1513;
@@ -239,19 +241,24 @@ void loop() {
   currentMillis = millis();
 
 
+  digitalWrite(LED_BUILTIN, digitalRead(BUTTON_PIN));
 
 
-  previousModeButton = currentModeButton;
-  currentModeButton = digitalRead(MODE_PIN);
-  if(currentModeButton != previousModeButton) {
-    if(currentModeButton == 0) {
-      modeButtonMillis = currentMillis;
+  previousButtonValue = currentButtonValue;
+  currentButtonValue = digitalRead(BUTTON_PIN);
+  if(currentButtonValue != previousButtonValue) 
+  {
+    if(currentButtonValue == 0) 
+    {
+      buttonMillis = currentMillis;
       nextDisplay();
     }
-    else {
-      if((currentMillis - modeButtonMillis) < DEBOUNCE_DELAY) {
-        currentModeButton = 0;
-      }
+    else 
+    {
+       if((currentMillis - buttonMillis) < DEBOUNCE_DELAY) 
+       {
+         currentButtonValue = 0;
+       }
     }
   }
 
@@ -292,7 +299,10 @@ void loop() {
 
 void nextDisplay() 
 {
-
+  if(DEBUG)
+  {
+    Serial.println("next display");
+  }
 }
 
 void resetCanVariables() {
