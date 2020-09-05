@@ -15,8 +15,6 @@
 #define DEBUG true              //print out debug messages on serial port
 #define BLOCK 255               //block character to build bar graphs
 #define SPACE 32                //space character for start animation
-#define SYSTEM_MESSAGE_ID 411   //message id on can bus
-
 
 // CAN BUS OBJECTS //////////////////////////////////////////////
 
