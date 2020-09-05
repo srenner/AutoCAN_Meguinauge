@@ -98,6 +98,11 @@ bool currentButtonValue = 1;
 bool previousButtonValue = 1;
 unsigned long buttonMillis = 0;
 
+// WARMUP VARIABLES ///////////////////////////////////
+
+const float STARTUP_CLT_VALUE = -200.0;
+float startupCLT = STARTUP_CLT_VALUE;
+
 // LOOP TIMER VARIABLES ///////////////////////////////
 
 unsigned long currentMillis = 0;
@@ -300,7 +305,47 @@ void drawDisplay()
   {
     drawDualGauge(d->gauge1, d->gauge2);
   }
+  else if(d->type == warmup)
+  {
+    if(engine_clt.currentValue < 160.0)
+    {
+      drawWarmup();
+    }
+    else 
+    {
+      nextDisplay();
+    }
+  }
+  else if(d->type == runtime)
+  {
+    drawRuntime();
+  }
 
+}
+
+void drawWarmup()
+{
+  if(startupCLT > 159.9 || engine_clt.currentValue > 159.9)
+  {
+    nextDisplay();
+  }
+  else
+  {
+    writeToDisplay("Warmup", 1, 1);
+    writeToDisplay(engine_clt.currentValue, engine_clt.decimalPlaces, 1, 7);
+    //drawBar(float lowValue, float highValue, float currentValue, int row, int column, int maxLength)
+    drawBar(startupCLT, 160.0, engine_clt.currentValue, 2, 1, 16);
+  }
+}
+
+void drawRuntime()
+{
+  writeToDisplay("Runtime", 1, 1);
+
+  char timeChars[32];
+  unsigned long lval;
+  ltoa(lval,timeChars,10);
+  writeToDisplay(timeChars, 1, 8);
 }
 
 void resetCanVariables() {
@@ -435,6 +480,10 @@ void processCanMessage(st_cmd_t msg)
         
         engine_clt.previousValue = engine_clt.currentValue;
         engine_clt.currentValue = (msg.pt_data[4] * 256 + msg.pt_data[5]) / 10.0;
+        if(startupCLT == STARTUP_CLT_VALUE)
+        {
+          startupCLT = engine_clt.currentValue;
+        }
         increment_counter(&engine_clt);
         
         engine_tps.previousValue = engine_tps.currentValue;
@@ -623,6 +672,19 @@ void drawBar(EngineVariable* engineVar, int row, int column, int maxLength) {
   
   int length = map(engineVar->currentValue, engineVar->minimum, engineVar->maximum, 0, maxLength);
 
+  for(int i = 0; i < maxLength; i++) {
+    if(i > length) {
+      writeSpecialToDisplay(SPACE, row, column+i);
+    }
+    else {
+      writeSpecialToDisplay(BLOCK, row, column+i);
+    }
+  }
+}
+
+void drawBar(float lowValue, float highValue, float currentValue, int row, int column, int maxLength)
+{
+  int length = map(currentValue, lowValue, highValue, 0, maxLength);
   for(int i = 0; i < maxLength; i++) {
     if(i > length) {
       writeSpecialToDisplay(SPACE, row, column+i);
