@@ -129,28 +129,29 @@ enum DisplayType {
 struct Display
 {
   DisplayType type;
-  EngineVariable gauge1;
-  EngineVariable gauge2;
+  EngineVariable* gauge1;
+  EngineVariable* gauge2;
 };
 
 const byte DISPLAY_COUNT = 16;
+byte currentDisplayIndex = -1;
 Display* allDisplays[DISPLAY_COUNT];
 Display display_warmup    = {warmup, NULL, NULL};
 Display display_runtime   = {runtime, NULL, NULL};
-Display display_clt_iat   = {dual, engine_clt, engine_iat};
-Display display_afr_tgt   = {dual, engine_afr, engine_tgt};
-Display display_afr_map   = {dual, engine_afr, engine_map};
-Display display_afr_ego   = {dual, engine_afr, engine_ego};
-Display display_vss_rpm   = {dual, engine_vss, engine_rpm};
-Display display_rpm_bat   = {dual, engine_rpm, engine_bat};
-Display display_bat       = {single, engine_bat, NULL};
-Display display_clt       = {single, engine_clt, NULL};
-Display display_iat       = {single, engine_iat, NULL};
-Display display_afr       = {single, engine_afr, NULL};
-Display display_map       = {single, engine_map, NULL};
-Display display_adv       = {single, engine_adv, NULL};
-Display display_tps       = {single, engine_tps, NULL};
-Display display_pw1       = {single, engine_pw1, NULL};
+Display display_clt_iat   = {dual, &engine_clt, &engine_iat};
+Display display_afr_tgt   = {dual, &engine_afr, &engine_tgt};
+Display display_afr_map   = {dual, &engine_afr, &engine_map};
+Display display_afr_ego   = {dual, &engine_afr, &engine_ego};
+Display display_vss_rpm   = {dual, &engine_vss, &engine_rpm};
+Display display_rpm_bat   = {dual, &engine_rpm, &engine_bat};
+Display display_bat       = {single, &engine_bat, NULL};
+Display display_clt       = {single, &engine_clt, NULL};
+Display display_iat       = {single, &engine_iat, NULL};
+Display display_afr       = {single, &engine_afr, NULL};
+Display display_map       = {single, &engine_map, NULL};
+Display display_adv       = {single, &engine_adv, NULL};
+Display display_tps       = {single, &engine_tps, NULL};
+Display display_pw1       = {single, &engine_pw1, NULL};
 
 
 bool inError = false;
@@ -222,12 +223,12 @@ void setup() {
 
   #pragma endregion
 
-  writeToDisplay("Waiting for ECU");
+  writeToDisplay("Waiting for CAN bus");
   canInit(500000);                        // Initialise CAN port - must be before Serial.begin
   Serial.begin(1000000);
 
   if(DEBUG) {
-    Serial.println("Connected to ECU");
+    Serial.println("Connected to CAN bus");
   }
   clearDisplay();
   bootAnimation();
@@ -240,12 +241,14 @@ void loop() {
   previousMillis = currentMillis;
   currentMillis = millis();
 
-
-  digitalWrite(LED_BUILTIN, digitalRead(BUTTON_PIN));
-
+  if(currentDisplayIndex == -1)
+  {
+    nextDisplay();
+  }
 
   previousButtonValue = currentButtonValue;
   currentButtonValue = digitalRead(BUTTON_PIN);
+  digitalWrite(LED_BUILTIN, currentButtonValue);
   if(currentButtonValue != previousButtonValue) 
   {
     if(currentButtonValue == 0) 
@@ -271,15 +274,10 @@ void loop() {
     if(currentMillis - lastDisplayMillis >= displayInterval && currentMillis > 500) {
       lastDisplayMillis = currentMillis;
 
-        if(false) {
-          drawSingleGauge(&engine_rpm);
-        }
+        //drawDualGauge(&engine_clt, &engine_iat);
 
-        if(true) {
-          drawDualGauge(&engine_clt, &engine_iat);
-        }
-
-        //calculateShiftLight();
+        drawDisplay();
+        calculateShiftLight();
 
     }
   }
@@ -303,6 +301,28 @@ void nextDisplay()
   {
     Serial.println("next display");
   }
+  clearDisplay();
+  currentDisplayIndex++;
+  if(currentDisplayIndex >= (DISPLAY_COUNT - 1))
+  {
+    currentDisplayIndex = 0;
+  }
+  //drawDisplay();
+}
+
+void drawDisplay()
+{
+  Display* d = allDisplays[currentDisplayIndex];
+
+  if(d->type == single)
+  {
+    drawSingleGauge(d->gauge1);
+  }
+  else if(d->type == dual)
+  {
+    drawDualGauge(d->gauge1, d->gauge2);
+  }
+
 }
 
 void resetCanVariables() {
@@ -313,6 +333,7 @@ void resetCanVariables() {
 }
 
 int loadFromCan() {
+
   clearBuffer(&canBuffer[0]);
   canMsg.cmd      = CMD_RX_DATA;
   canMsg.pt_data  = &canBuffer[0];
@@ -696,6 +717,11 @@ void drawDualGauge(EngineVariable* gauge1, EngineVariable* gauge2)
   char* gauge1Label = gauge1->shortLabel;
   float gauge1Value = gauge1->currentValue;
   int gauge1Decimal = gauge1->decimalPlaces;
+  Serial.print(gauge1Label);
+  Serial.print("~");
+  Serial.print(gauge1Value);
+  Serial.print("~");
+  Serial.println(gauge1Decimal);
   writeToDisplay(gauge1Label, 1, 1);
   writeToDisplay(gauge1Value, gauge1Decimal, 1, 5);
   drawBar(gauge1, 1, 9, 8);
