@@ -290,6 +290,10 @@ void nextDisplay()
   if(currentDisplayIndex >= (DISPLAY_COUNT - 1))
   {
     currentDisplayIndex = 0;
+    if(engine_clt.currentValue > 159.9)
+    {
+      currentDisplayIndex = 1;
+    }
   }
 }
 
