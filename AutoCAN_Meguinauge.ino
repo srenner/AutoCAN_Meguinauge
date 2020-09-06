@@ -635,55 +635,6 @@ void increment_counter(EngineVariable* engine) {
   }  
 }
 
-//note: using log10 would work but this is faster
-bool isCurrentValueShorter(EngineVariable engine) {
-  int roundedCurrent = round(engine.currentValue);
-  int roundedPrevious = round(engine.previousValue);
-  byte currentLength;
-  if(roundedCurrent >= 10000) {
-    currentLength = 5;
-  }
-  else if(roundedCurrent >= 1000) {
-    currentLength = 4;
-  }
-  else if(roundedCurrent >= 100) {
-    currentLength = 3;
-  }
-  else if(roundedCurrent >= 10) {
-    currentLength = 2;
-  }
-  else {
-    currentLength = 1;
-  }
-  if(engine.decimalPlaces > 0) {
-    currentLength++;
-    currentLength+= engine.decimalPlaces;
-  }
-
-  byte previousLength;
-  if(roundedPrevious >= 10000) {
-    previousLength = 5;
-  }
-  else if(roundedPrevious >= 1000) {
-    previousLength = 4;
-  }
-  else if(roundedPrevious >= 100) {
-    previousLength = 3;
-  }
-  else if(roundedPrevious >= 10) {
-    previousLength = 2;
-  }
-  else {
-    previousLength = 1;
-  }
-  if(engine.decimalPlaces > 0) {
-    previousLength++;
-    previousLength += engine.decimalPlaces;
-  }
-
-  return currentLength < previousLength;
-}
-
 void drawBar(EngineVariable* engineVar, int row, int column, int maxLength) {
   
   int length = map(engineVar->currentValue, engineVar->minimum, engineVar->maximum, 0, maxLength);
