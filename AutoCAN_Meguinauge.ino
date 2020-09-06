@@ -279,6 +279,20 @@ void loop() {
   }
 }
 
+char* formatTime(unsigned long milliseconds)
+{
+  unsigned long seconds = milliseconds / 1000;
+  int runHours = seconds / 3600;
+  int secsRemaining = seconds % 3600;
+  int runMinutes = secsRemaining / 60;
+  int runSeconds = secsRemaining % 60;
+
+  char buf[9];
+  sprintf(buf,"%02d:%02d:%02d",runHours,runMinutes,runSeconds);
+  char* ret = buf;
+  return ret;
+}
+
 void nextDisplay() 
 {
   if(DEBUG)
@@ -346,10 +360,9 @@ void drawRuntime()
 {
   writeToDisplay("Runtime", 1, 1);
 
-  char timeChars[32];
-  unsigned long lval;
-  ltoa(lval,timeChars,10);
-  writeToDisplay(timeChars, 1, 8);
+  char* formattedRuntime = formatTime(millis());
+  Serial.println(formattedRuntime);
+  writeToDisplay(formattedRuntime, 1, 9);
 }
 
 void resetCanVariables() {
@@ -450,8 +463,7 @@ int loadFromCan() {
     
     writeToDisplay("CAN BUS ERROR");
     delay(1000);
-    //resetFunc();
-    
+    clearDisplay();
 
   }
   else
