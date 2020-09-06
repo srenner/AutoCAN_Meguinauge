@@ -1,5 +1,6 @@
-#define CAN_INFO_MSG_ID 411   //message id for messages on can bus
-#define CAN_ERROR_MSG_ID 911    //message id for errors on can bus
+#define CAN_INFO_MSG_ID 411         //message id for messages on can bus
+#define CAN_ERROR_MSG_ID 911        //message id for errors on can bus
+#define VSS_PULSE_PER_MILE 8000     //used to determine both speed and distance
 
 typedef struct {
     int messageID;
