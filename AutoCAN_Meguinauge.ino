@@ -154,10 +154,10 @@ Display display_adv       = {single, &engine_adv, NULL};
 Display display_tps       = {single, &engine_tps, NULL};
 Display display_pw1       = {single, &engine_pw1, NULL};
 
-
 bool inError = false;
 
 const byte DEBOUNCE_DELAY = 250;
+const int REBOOT_DELAY = 2000;
 const int SHIFT_LIGHT_FROM_REDLINE_WOT = 500;
 const int SHIFT_LIGHT_FROM_REDLINE_CRUISE = 1000;
 
@@ -254,6 +254,17 @@ void loop() {
        if((currentMillis - buttonMillis) < DEBOUNCE_DELAY) 
        {
          currentButtonValue = 0;
+       }
+       if((currentMillis - buttonMillis) > REBOOT_DELAY)
+       {
+         clearDisplay();
+         setCursorPosition(1,1);
+         for(int i = 0; i < 32; i++)
+         {
+           writeToDisplay(BLOCK);
+         }
+         delay(1000);
+         resetFunc();
        }
     }
   }
@@ -461,23 +472,17 @@ int loadFromCan() {
   {
     Serial.println("=====");
     digitalWrite(LED_BUILTIN, HIGH);
-    
     writeToDisplay("CAN BUS ERROR");
     delay(1000);
     clearDisplay();
-
   }
   else
   {
     digitalWrite(LED_BUILTIN, LOW);
     Serial.println("===============================");
   }
-
   unsigned long end = millis();
   unsigned long diff = end - start;
-  //Serial.println(diff);
-
-
   return 0;
 }
 
@@ -591,7 +596,6 @@ void processCanMessage(st_cmd_t msg)
     }
 
 }
-
 
 void serialPrintData(st_cmd_t *msg){
   char textBuffer[50] = {0};
