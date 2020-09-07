@@ -158,7 +158,8 @@ Display display_pw1       = {single, &engine_pw1, NULL};
 bool inError = false;
 
 const byte DEBOUNCE_DELAY = 250;
-const int SHIFT_LIGHT_FROM_REDLINE = 500;
+const int SHIFT_LIGHT_FROM_REDLINE_WOT = 500;
+const int SHIFT_LIGHT_FROM_REDLINE_CRUISE = 1000;
 
 void(* resetFunc) (void) = 0; //declare killswitch function
 
@@ -688,7 +689,16 @@ bool calculateErrorLight() {
 void calculateShiftLight()
 {
   previousShiftLight = shiftLight;
-  shiftLight = (engine_rpm.currentValue + SHIFT_LIGHT_FROM_REDLINE) > engine_rpm.maximum;
+  int shiftLightValue = 0;
+  if(engine_tps.currentValue > 75)
+  {
+    shiftLightValue = SHIFT_LIGHT_FROM_REDLINE_WOT;
+  }
+  else 
+  {
+    shiftLightValue = SHIFT_LIGHT_FROM_REDLINE_CRUISE;
+  }
+  shiftLight = (engine_rpm.currentValue + shiftLightValue) > engine_rpm.maximum;
 
   if(shiftLight == true && previousShiftLight == false)
   {
