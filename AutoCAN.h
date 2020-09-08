@@ -1,7 +1,7 @@
-#define CAN_INFO_MSG_ID 411             //message id for messages on can bus
-#define CAN_ENGINE_ERROR_MSG_ID 500     //message id for engine sensors out of range and/or errors
-#define CAN_ERROR_MSG_ID 911            //message id for errors related to can bus comms, etc.
-#define VSS_PULSE_PER_MILE 8000         //used to determine both speed and distance, Ford is typically 8000, GM is sometimes 4000
+#define CAN_INFO_MSG_ID             411     //message id for messages on can bus
+#define CAN_ENGINE_ERROR_MSG_ID     500     //message id for engine sensors out of range and/or errors
+#define CAN_ERROR_MSG_ID            911     //message id for errors related to can bus comms, etc.
+#define VSS_PULSE_PER_MILE          8000    //used to determine both speed and distance, Ford is typically 8000, GM is sometimes 4000
 
 typedef struct {
     int messageID;
