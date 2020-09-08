@@ -2,7 +2,7 @@
 #include "Can485DisplayHelper.h"
 #include <ASTCanLib.h>
 #include <math.h>
-#include "AutoCAN.h"
+#include <AutoCAN.h>
 
 /*
   CONFIGURATION NOTES
