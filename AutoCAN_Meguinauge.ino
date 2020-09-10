@@ -171,20 +171,6 @@ ISR(CANIT_vect) {
 
 void setup() {
 
-
-  //??? https://github.com/thomasonw/avr_can/blob/master/avr_can.cpp
-  //CANGCON |=  (1<<ENASTB);
-
-
-
-  //???
-  // CAN_PORT_DIR &= ~(1<<CAN_INPUT_PIN );
-  // CAN_PORT_DIR &= ~(1<<CAN_OUTPUT_PIN);
-  // CAN_PORT_OUT |=  (1<<CAN_INPUT_PIN );
-  // CAN_PORT_OUT |=  (1<<CAN_OUTPUT_PIN);
-
-
-
   DisplayInit();  
 
   pinMode(LED_ERR, OUTPUT);
@@ -277,11 +263,6 @@ void setup() {
 
   CANGIE |= (1 << ENIT);
 
-  //IEMOB2 
-
-
-  //CANGIE = 0xFE;
-
 
   if(DEBUG) {
     Serial.println("CAN bus initialized");
@@ -293,45 +274,21 @@ void setup() {
 
 
 
-      clearBuffer(&canBuffer[0]);
-    canMsg.cmd      = CMD_RX_DATA;
-    canMsg.pt_data  = &canBuffer[0];
-    canMsg.ctrl.ide = MESSAGE_PROTOCOL; 
-    canMsg.id.std   = 0;
-    canMsg.id.ext   = 0;
-    canMsg.dlc      = MESSAGE_LENGTH;
-    canMsg.ctrl.rtr = MESSAGE_RTR;
+  clearBuffer(&canBuffer[0]);
+  canMsg.cmd      = CMD_RX_DATA;
+  canMsg.pt_data  = &canBuffer[0];
+  canMsg.ctrl.ide = MESSAGE_PROTOCOL; 
+  canMsg.id.std   = 0;
+  canMsg.id.ext   = 0;
+  canMsg.dlc      = MESSAGE_LENGTH;
+  canMsg.ctrl.rtr = MESSAGE_RTR;
 
-    while(can_cmd(&canMsg) != CAN_CMD_ACCEPTED);
+  while(can_cmd(&canMsg) != CAN_CMD_ACCEPTED);
 }
 
-bool runOnce = true;
-
 void loop() {
-
   
-  //writeToDisplay("is this thing on");
-  //delay(100);
-  //clearDisplay();
-  //delay(100);
   Serial.println(canCount);
-
-
-  if(false) {
-    clearBuffer(&canBuffer[0]);
-    canMsg.cmd      = CMD_RX_DATA;
-    canMsg.pt_data  = &canBuffer[0];
-    canMsg.ctrl.ide = MESSAGE_PROTOCOL; 
-    canMsg.id.std   = 0;
-    canMsg.id.ext   = 0;
-    canMsg.dlc      = MESSAGE_LENGTH;
-    canMsg.ctrl.rtr = MESSAGE_RTR;
-
-    while(can_cmd(&canMsg) != CAN_CMD_ACCEPTED);
-
-    runOnce = false;
-  }
-
 
   //loadFromCan();
 
