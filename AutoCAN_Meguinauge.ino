@@ -35,7 +35,7 @@ CanVariable can1514 = {1514, false, NULL};
 CanVariable can1515 = {1515, false, NULL};
 CanVariable can1516 = {1516, false, NULL};
 
-st_cmd_t canMsg;
+
 uint8_t canBuffer[8] = {};
 
 #define MESSAGE_PROTOCOL  0     // CAN protocol (0: CAN 2.0A, 1: CAN 2.0B)
@@ -164,9 +164,53 @@ const int SHIFT_LIGHT_FROM_REDLINE_CRUISE = 1000;
 void(* resetFunc) (void) = 0; //declare killswitch function
 
 volatile unsigned long canCount = 0;
+volatile st_cmd_t canMsg;
 
 ISR(CANIT_vect) {
   canCount++;
+
+    unsigned i;   
+    char save_canpage=CANPAGE;   
+       
+    unsigned mob=CANHPMOB; // get highest prio mob   
+    CANPAGE = mob & 0xf0;   
+    mob >>= 4; // -> mob number 0..15   
+    //ASSERT( (CANSTMOB & ~0xa0) ==0); // allow only RX ready and DLC warning   
+      
+    canMsg.id.std = (CANIDT2>>5) | (CANIDT1 <<3);
+    
+    register char length; 
+    length=CANCDMOB & 0x0f;   
+    for (i = 0; i <length; ++i)   
+    {
+      canMsg.pt_data[i] = CANMSG;
+    }   
+    
+    CANSTMOB=0;     // reset INT reason   
+    CANCDMOB=0x80;  // re-enable RX on this channel   
+    //canlist[ mob]( &packet, mob);   
+    CANPAGE=save_canpage;   // restore CANPAGE   
+
+
+
+
+
+
+
+
+      // if RXOK is set
+    // if ( ( CANSTMOB & (1 << RXOK) ) == (1 << RXOK) )  
+    // {
+    //     for (int i=0; i<8; i++) { canMsg.pt_data[i] = CANMSG; } 
+    //     canMsg.id.std = CANIDM;
+    //     // reset RXOK w/ read-mod-write
+    //     //CANSTMOB &= ~(1 << RXOK);                    
+    // }
+
+    //CANCDMOB = 0x88;
+
+    //Can_mob_abort();        // Freed the MOB
+    //Can_clear_status_mob(); //   and reset MOb status
 }
 
 void setup() {
@@ -288,8 +332,10 @@ void setup() {
 
 void loop() {
   
-  Serial.println(canCount);
+  //Serial.println(canCount);
 
+
+  serialPrintData(&canMsg);
   //loadFromCan();
 
   previousMillis = currentMillis;
@@ -483,7 +529,7 @@ int loadFromCan() {
         {
           got1512 = true;
           Serial.println("got1512");
-          processCanMessage(canMsg);
+         // processCanMessage(canMsg);
         }
         break;
       case 1513:
@@ -491,7 +537,7 @@ int loadFromCan() {
         {
           got1513 = true;
           Serial.println("got1513");
-          processCanMessage(canMsg);
+          //processCanMessage(canMsg);
         }
         break;
       case 1514:
@@ -499,7 +545,7 @@ int loadFromCan() {
         {
           got1514 = true;
           Serial.println("got1514");
-          processCanMessage(canMsg);
+          //processCanMessage(canMsg);
         }
         break;
       case 1515:
@@ -507,7 +553,7 @@ int loadFromCan() {
         {
           got1515 = true;
           Serial.println("got1515");
-          processCanMessage(canMsg);
+          //processCanMessage(canMsg);
         }
         break;
       case 1516:
@@ -515,7 +561,7 @@ int loadFromCan() {
         {
           got1516 = true;
           Serial.println("got1516");
-          processCanMessage(canMsg);
+          //processCanMessage(canMsg);
         }
         break;
       default:
@@ -544,7 +590,7 @@ int loadFromCan() {
   return 0;
 }
 
-void processCanMessage(st_cmd_t msg)
+void processCanMessage(volatile st_cmd_t msg)
 {
       switch(msg.id.std) {
       case 1512:
@@ -655,7 +701,7 @@ void processCanMessage(st_cmd_t msg)
 
 }
 
-void serialPrintData(st_cmd_t *msg){
+void serialPrintData(volatile st_cmd_t *msg){
   char textBuffer[50] = {0};
   if (msg->ctrl.ide>0){
     sprintf(textBuffer,"id %d ",msg->id.ext);
