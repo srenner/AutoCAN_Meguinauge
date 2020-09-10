@@ -163,7 +163,27 @@ const int SHIFT_LIGHT_FROM_REDLINE_CRUISE = 1000;
 
 void(* resetFunc) (void) = 0; //declare killswitch function
 
+volatile unsigned long canCount = 0;
+
+ISR(CANIT_vect) {
+  canCount++;
+}
+
 void setup() {
+
+
+  //??? https://github.com/thomasonw/avr_can/blob/master/avr_can.cpp
+  //CANGCON |=  (1<<ENASTB);
+
+
+
+  //???
+  // CAN_PORT_DIR &= ~(1<<CAN_INPUT_PIN );
+  // CAN_PORT_DIR &= ~(1<<CAN_OUTPUT_PIN);
+  // CAN_PORT_OUT |=  (1<<CAN_INPUT_PIN );
+  // CAN_PORT_OUT |=  (1<<CAN_OUTPUT_PIN);
+
+
 
   DisplayInit();  
 
@@ -225,16 +245,95 @@ void setup() {
   canInit(500000);                        // Initialise CAN port - must be before Serial.begin
   Serial.begin(1000000);
 
+  /*
+    The general interrupt enable is provided by ENIT bit and the specific interrupt enable for CAN
+    timer overrun is provided by ENORVT bit.
+
+    Bit 5 – ENRX: Enable Receive Interrupt
+    – 0 - interrupt disabled.
+    – 1- receive interrupt enabled.
+
+  */
+
+  CANSTMOB |= (1 << RXOK);
+  CANGIE |= (1 << ENRX);
+
+  CANIE1 |= (1 << IEMOB14);
+  CANIE1 |= (1 << IEMOB13);
+  CANIE1 |= (1 << IEMOB12);
+  CANIE1 |= (1 << IEMOB11);
+  CANIE1 |= (1 << IEMOB10);
+  CANIE1 |= (1 << IEMOB9);
+  CANIE1 |= (1 << IEMOB8);
+
+  CANIE2 |= (1 << IEMOB7);
+  CANIE2 |= (1 << IEMOB6);
+  CANIE2 |= (1 << IEMOB5);
+  CANIE2 |= (1 << IEMOB4);
+  CANIE2 |= (1 << IEMOB3);
+  CANIE2 |= (1 << IEMOB2);
+  CANIE2 |= (1 << IEMOB1);
+  CANIE2 |= (1 << IEMOB0);
+
+  CANGIE |= (1 << ENIT);
+
+  //IEMOB2 
+
+
+  //CANGIE = 0xFE;
+
+
   if(DEBUG) {
-    Serial.println("CAN bus");
+    Serial.println("CAN bus initialized");
   }
   clearDisplay();
   bootAnimation();
+
+
+
+
+
+      clearBuffer(&canBuffer[0]);
+    canMsg.cmd      = CMD_RX_DATA;
+    canMsg.pt_data  = &canBuffer[0];
+    canMsg.ctrl.ide = MESSAGE_PROTOCOL; 
+    canMsg.id.std   = 0;
+    canMsg.id.ext   = 0;
+    canMsg.dlc      = MESSAGE_LENGTH;
+    canMsg.ctrl.rtr = MESSAGE_RTR;
+
+    while(can_cmd(&canMsg) != CAN_CMD_ACCEPTED);
 }
+
+bool runOnce = true;
 
 void loop() {
 
-  loadFromCan();
+  
+  //writeToDisplay("is this thing on");
+  //delay(100);
+  //clearDisplay();
+  //delay(100);
+  Serial.println(canCount);
+
+
+  if(false) {
+    clearBuffer(&canBuffer[0]);
+    canMsg.cmd      = CMD_RX_DATA;
+    canMsg.pt_data  = &canBuffer[0];
+    canMsg.ctrl.ide = MESSAGE_PROTOCOL; 
+    canMsg.id.std   = 0;
+    canMsg.id.ext   = 0;
+    canMsg.dlc      = MESSAGE_LENGTH;
+    canMsg.ctrl.rtr = MESSAGE_RTR;
+
+    while(can_cmd(&canMsg) != CAN_CMD_ACCEPTED);
+
+    runOnce = false;
+  }
+
+
+  //loadFromCan();
 
   previousMillis = currentMillis;
   currentMillis = millis();
@@ -270,7 +369,7 @@ void loop() {
   }
 
   //draw display
-  if(true) {
+  if(false) {
     if(currentMillis - lastDisplayMillis >= displayInterval && currentMillis > 500) {
       lastDisplayMillis = currentMillis;
         drawDisplay();
@@ -279,7 +378,7 @@ void loop() {
   }
 
   //check for errors
-  if(true) {
+  if(false) {
     if(currentMillis - lastDiagnosticMillis >= diagnosticInterval && currentMillis > 500) {
       lastDiagnosticMillis = currentMillis;
       bool err = calculateErrorLight();
@@ -373,7 +472,7 @@ void drawRuntime()
   writeToDisplay("Runtime", 1, 1);
 
   char* formattedRuntime = formatTime(millis());
-  Serial.println(formattedRuntime);
+  //Serial.println(formattedRuntime);
   writeToDisplay(formattedRuntime, 1, 9);
 }
 
@@ -395,8 +494,10 @@ int loadFromCan() {
   canMsg.dlc      = MESSAGE_LENGTH;
   canMsg.ctrl.rtr = MESSAGE_RTR;
 
+  while(can_cmd(&canMsg) != CAN_CMD_ACCEPTED);
+
   // Wait for the command to be accepted by the controller
-  //while(can_cmd(&canMsg) != CAN_CMD_ACCEPTED);
+  while(can_cmd(&canMsg) != CAN_CMD_ACCEPTED);
 
 
   unsigned long start = millis();
@@ -738,11 +839,6 @@ void drawDualGauge(EngineVariable* gauge1, EngineVariable* gauge2)
   char* gauge1Label = gauge1->shortLabel;
   float gauge1Value = gauge1->currentValue;
   int gauge1Decimal = gauge1->decimalPlaces;
-  Serial.print(gauge1Label);
-  Serial.print("~");
-  Serial.print(gauge1Value);
-  Serial.print("~");
-  Serial.println(gauge1Decimal);
   writeToDisplay(gauge1Label, 1, 1);
   writeToDisplay(gauge1Value, gauge1Decimal, 1, 5);
   drawBar(gauge1, 1, 9, 8);
