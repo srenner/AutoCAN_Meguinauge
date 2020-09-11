@@ -336,6 +336,9 @@ void loop() {
 
 
   serialPrintData(&canMsg);
+
+  processCanMessage(&canMsg);
+
   //loadFromCan();
 
   previousMillis = currentMillis;
@@ -372,7 +375,7 @@ void loop() {
   }
 
   //draw display
-  if(false) {
+  if(true) {
     if(currentMillis - lastDisplayMillis >= displayInterval && currentMillis > 500) {
       lastDisplayMillis = currentMillis;
         drawDisplay();
@@ -590,22 +593,22 @@ int loadFromCan() {
   return 0;
 }
 
-void processCanMessage(volatile st_cmd_t msg)
+void processCanMessage(volatile st_cmd_t* msg)
 {
-      switch(msg.id.std) {
+      switch(msg->id.std) {
       case 1512:
         engine_map.previousValue = engine_map.currentValue;
-        engine_map.currentValue = ((msg.pt_data[0] * 256) + msg.pt_data[1]) / 10.0;
+        engine_map.currentValue = ((msg->pt_data[0] * 256) + msg->pt_data[1]) / 10.0;
         increment_counter(&engine_map);
 
         engine_rpm.previousValue = engine_rpm.currentValue;
         //engine_rpm.currentValue = buf[2] * 256 + buf[3];
         //round rpm to nearest 10
-        engine_rpm.currentValue = round((msg.pt_data[2] * 256 + msg.pt_data[3]) / 10.0) * 10.0;
+        engine_rpm.currentValue = round((msg->pt_data[2] * 256 + msg->pt_data[3]) / 10.0) * 10.0;
         increment_counter(&engine_rpm);
         
         engine_clt.previousValue = engine_clt.currentValue;
-        engine_clt.currentValue = (msg.pt_data[4] * 256 + msg.pt_data[5]) / 10.0;
+        engine_clt.currentValue = (msg->pt_data[4] * 256 + msg->pt_data[5]) / 10.0;
         if(startupCLT == STARTUP_CLT_VALUE)
         {
           startupCLT = engine_clt.currentValue;
@@ -613,84 +616,84 @@ void processCanMessage(volatile st_cmd_t msg)
         increment_counter(&engine_clt);
         
         engine_tps.previousValue = engine_tps.currentValue;
-        engine_tps.currentValue = (msg.pt_data[6] * 256 + msg.pt_data[7]) / 10.0;
+        engine_tps.currentValue = (msg->pt_data[6] * 256 + msg->pt_data[7]) / 10.0;
         increment_counter(&engine_tps);
         
         break;
       case 1513:
         engine_pw1.previousValue = engine_pw1.currentValue;
-        engine_pw1.currentValue = (msg.pt_data[0] * 256 + msg.pt_data[1]) / 1000.0;
+        engine_pw1.currentValue = (msg->pt_data[0] * 256 + msg->pt_data[1]) / 1000.0;
         increment_counter(&engine_pw1);
 
         engine_pw2.previousValue = engine_pw2.currentValue;
-        engine_pw2.currentValue = (msg.pt_data[2] * 256 + msg.pt_data[3]) / 1000.0;
+        engine_pw2.currentValue = (msg->pt_data[2] * 256 + msg->pt_data[3]) / 1000.0;
         increment_counter(&engine_pw2);
 
         engine_iat.previousValue = engine_iat.currentValue;
-        engine_iat.currentValue = (msg.pt_data[4] * 256 + msg.pt_data[5]) / 10.0;
+        engine_iat.currentValue = (msg->pt_data[4] * 256 + msg->pt_data[5]) / 10.0;
         increment_counter(&engine_iat);
 
         engine_adv.previousValue = engine_adv.currentValue;
-        engine_adv.currentValue = (msg.pt_data[6] * 256 + msg.pt_data[7]) / 10.0;
+        engine_adv.currentValue = (msg->pt_data[6] * 256 + msg->pt_data[7]) / 10.0;
         increment_counter(&engine_adv);
         
         break;
       case 1514:
         engine_tgt.previousValue = engine_tgt.currentValue;
-        engine_tgt.currentValue = (double)msg.pt_data[0] / 10.0;
+        engine_tgt.currentValue = (double)msg->pt_data[0] / 10.0;
         increment_counter(&engine_tgt);
 
         engine_afr.previousValue = engine_afr.currentValue;
-        engine_afr.currentValue = (double)msg.pt_data[1] / 10.0;
+        engine_afr.currentValue = (double)msg->pt_data[1] / 10.0;
         increment_counter(&engine_afr);
 
         engine_ego.previousValue = engine_ego.currentValue;
-        engine_ego.currentValue = (msg.pt_data[2] * 256 + msg.pt_data[3]) / 10.0;
+        engine_ego.currentValue = (msg->pt_data[2] * 256 + msg->pt_data[3]) / 10.0;
         increment_counter(&engine_ego);
 
         engine_egt.previousValue = engine_egt.currentValue;
-        engine_egt.currentValue = (msg.pt_data[4] * 256 + msg.pt_data[5]) / 10.0;
+        engine_egt.currentValue = (msg->pt_data[4] * 256 + msg->pt_data[5]) / 10.0;
         increment_counter(&engine_egt);
 
         engine_pws.previousValue = engine_pws.currentValue;
-        engine_pws.currentValue = (msg.pt_data[6] * 256 + msg.pt_data[7]) / 1000.0;
+        engine_pws.currentValue = (msg->pt_data[6] * 256 + msg->pt_data[7]) / 1000.0;
         increment_counter(&engine_pws);
         
         break;
       case 1515:
         engine_bat.previousValue = engine_bat.currentValue;
-        engine_bat.currentValue = (msg.pt_data[0] * 256 + msg.pt_data[1]) / 10.0;
+        engine_bat.currentValue = (msg->pt_data[0] * 256 + msg->pt_data[1]) / 10.0;
         increment_counter(&engine_bat);
 
         //not tested
         engine_sr1.previousValue = engine_sr1.currentValue;
-        engine_sr1.currentValue = (msg.pt_data[2] * 256 + msg.pt_data[3]) / 10.0;
+        engine_sr1.currentValue = (msg->pt_data[2] * 256 + msg->pt_data[3]) / 10.0;
         increment_counter(&engine_sr1);
 
         //not tested
         engine_sr2.previousValue = engine_sr2.currentValue;
-        engine_sr2.currentValue = (msg.pt_data[4] * 256 + msg.pt_data[5]) / 10.0;
+        engine_sr2.currentValue = (msg->pt_data[4] * 256 + msg->pt_data[5]) / 10.0;
         increment_counter(&engine_sr2);
 
         //not tested
         engine_knk.previousValue = engine_knk.currentValue;
-        engine_knk.currentValue = (msg.pt_data[6] * 256) / 10.0;
+        engine_knk.currentValue = (msg->pt_data[6] * 256) / 10.0;
         increment_counter(&engine_knk);
 
         break;
       case 1516:
         //not tested
         engine_vss.previousValue = engine_vss.currentValue;
-        engine_vss.currentValue = (msg.pt_data[0] * 256 + msg.pt_data[1]) / 10.0;
+        engine_vss.currentValue = (msg->pt_data[0] * 256 + msg->pt_data[1]) / 10.0;
         increment_counter(&engine_vss);
 
         //not tested
         engine_tcr.previousValue = engine_tcr.currentValue;
-        engine_tcr.currentValue = (msg.pt_data[2] * 256 + msg.pt_data[3]) / 10.0;
+        engine_tcr.currentValue = (msg->pt_data[2] * 256 + msg->pt_data[3]) / 10.0;
         increment_counter(&engine_tcr);
 
         engine_lct.previousValue = engine_lct.currentValue;
-        engine_lct.previousValue = (msg.pt_data[4] * 256 + msg.pt_data[5]) / 10.0;
+        engine_lct.previousValue = (msg->pt_data[4] * 256 + msg->pt_data[5]) / 10.0;
         increment_counter(&engine_lct);
         
         break;
