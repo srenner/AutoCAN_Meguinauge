@@ -167,16 +167,24 @@ volatile unsigned long canCount = 0;
 volatile st_cmd_t canMsg;
 
 typedef struct {
-  U8* data;
+  uint8_t* data;
   U16 id;
 } canData;
 
- volatile canData can1512;
- volatile canData can1513;
- volatile canData can1514;
- volatile canData can1515;
- volatile canData can1516;
+//uint8_t canBuffer[8] = {};
+
+volatile canData can1512;
+volatile canData can1513;
+volatile canData can1514;
+volatile canData can1515;
+volatile canData can1516;
 volatile canData canTemp;
+
+void clearBuf(volatile uint8_t* Buffer){
+  for (int i=0; i<8; i++){
+    Buffer[i] = 0x00;
+  }
+}
 
 ISR(CANIT_vect) {
   canCount++;
@@ -194,10 +202,11 @@ ISR(CANIT_vect) {
   
   register char length; 
   length = CANCDMOB & 0x0f;
-  clearBuffer(canTemp.data[0]);
+  //clearBuf(&canTemp.data);
   for (i = 0; i <length; ++i)   
   {
-    canMsg.pt_data[i] = CANMSG;
+    //canMsg.pt_data[i] = CANMSG;
+    //canTemp.data[i] = 0x00;
     canTemp.data[i] = CANMSG;
   }   
   
@@ -205,54 +214,68 @@ ISR(CANIT_vect) {
   CANCDMOB = 0x80;        // re-enable RX on this channel   
   CANPAGE = save_canpage; // restore CANPAGE   
 
-  if(true) 
+  if(false) 
   {
     switch(canTemp.id)
     {
-      case 1512:
-        clearBuffer(can1512.data[0]);
-        can1512.id = canTemp.id;
+      case 1512: //1512
+        can1512.id = 1512;
+        //clearBuf(can1512.data);
+        //memcpy(can1512.data, canTemp.data, sizeof(canTemp.data));
         for(int i = 0; i < 8; i++)
         {
-          can1512.data[i] = canTemp.data[i];
+          //memcpy(can1512.data, canTemp.data, sizeof(canTemp.data));
+          //can1512.data[i] = 0x00;
+          //can1512.data[i] = canTemp.data[i];
         }
         break;
       case 1513:
-        clearBuffer(can1513.data[0]);
-        can1513.id = canTemp.id;
-        for(int i = 0; i < 8; i++)
-        {
-          can1513.data[i] = canTemp.data[i];
-        }
+        can1513.id = 1513;
+        //memcpy(can1513.data, canTemp.data, sizeof(canTemp.data));
+        // clearBuf(can1513.data);
+        // can1513.id = canTemp.id;
+        // for(int i = 0; i < 8; i++)
+        // {
+        //   //can1513.data[i] = canTemp.data[i];
+        // }
         break;
       case 1514:
-        clearBuffer(can1514.data[0]);
-        can1514.id = canTemp.id;
-        for(int i = 0; i < 8; i++)
-        {
-          can1514.data[i] = canTemp.data[i];
-        }
+        can1514.id = 1514;
+        //memcpy(can1514.data, canTemp.data, sizeof(canTemp.data));
+        // clearBuf(can1514.data);
+        // can1514.id = canTemp.id;
+        // for(int i = 0; i < 8; i++)
+        // {
+        //   //can1514.data[i] = canTemp.data[i];
+        // }
         break;
       case 1515:
-        clearBuffer(can1515.data[0]);
-        can1515.id = canTemp.id;
-        for(int i = 0; i < 8; i++)
-        {
-          can1515.data[i] = canTemp.data[i];
-        }
+        can1515.id = 1515;
+        //memcpy(can1515.data, canTemp.data, sizeof(canTemp.data));
+        // clearBuf(can1515.data);
+        // can1515.id = canTemp.id;
+        // for(int i = 0; i < 8; i++)
+        // {
+        //   //can1515.data[i] = canTemp.data[i];
+        // }
         break;
       case 1516:
-        clearBuffer(can1516.data[0]);
-        can1516.id = canTemp.id;
-        for(int i = 0; i < 8; i++)
-        {
-          can1516.data[i] = canTemp.data[i];
-        }
-        //memcpy(can1516, canTemp, sizeof(canTemp));
-        //can1516 = canTemp;
+        can1516.id = 1516;
+        //memcpy(can1516.data, canTemp.data, sizeof(canTemp.data));
+        // clearBuf(can1516.data);
+        // can1516.id = canTemp.id;
+        // for(int i = 0; i < 8; i++)
+        // {
+        //   //can1516.data[i] = canTemp.data[i];
+        // }
+        // //memcpy(can1516, canTemp, sizeof(canTemp));
+        // //can1516 = canTemp;
+        break;
+      default:
+        //can1512.id = 123;
         break;
     }
-    clearBuffer(canTemp.data[0]);
+    //clearBuffer(canTemp.data[0]);
   }
 
 }
@@ -374,18 +397,27 @@ void setup() {
 void loop() {
   
   //Serial.println(canCount);
-
+  
+  //serialPrintData(&canMsg);
+  
   serialPrintCanData(&can1512);
-  serialPrintCanData(&can1513);
-  serialPrintCanData(&can1514);
-  serialPrintCanData(&can1515);
-  serialPrintCanData(&can1516);
-  Serial.println("=====");
-  serialPrintData(&canMsg);
+  //serialPrintCanData(&can1513);
+  //serialPrintCanData(&can1514);
+  //serialPrintCanData(&can1515);
+  //serialPrintCanData(&can1516);
+  
+  //serialPrintCanData(&canTemp);
+  
+  
 
+  /*
   //processCanMessage(&canMsg);
-
-  //loadFromCan();
+  processCanMessage(&can1512);
+  processCanMessage(&can1513);
+  processCanMessage(&can1514);
+  processCanMessage(&can1515);
+  processCanMessage(&can1516);
+  */
 
   previousMillis = currentMillis;
   currentMillis = millis();
@@ -421,7 +453,7 @@ void loop() {
   }
 
   //draw display
-  if(true) {
+  if(false) {
     if(currentMillis - lastDisplayMillis >= displayInterval && currentMillis > 500) {
       lastDisplayMillis = currentMillis;
         drawDisplay();
@@ -639,22 +671,22 @@ int loadFromCan() {
   // return 0;
 }
 
-void processCanMessage(volatile st_cmd_t* msg)
+void processCanMessage(volatile canData* msg)
 {
-      switch(msg->id.std) {
+      switch(msg->id) {
       case 1512:
         engine_map.previousValue = engine_map.currentValue;
-        engine_map.currentValue = ((msg->pt_data[0] * 256) + msg->pt_data[1]) / 10.0;
+        engine_map.currentValue = ((msg->data[0] * 256) + msg->data[1]) / 10.0;
         increment_counter(&engine_map);
 
         engine_rpm.previousValue = engine_rpm.currentValue;
         //engine_rpm.currentValue = buf[2] * 256 + buf[3];
         //round rpm to nearest 10
-        engine_rpm.currentValue = round((msg->pt_data[2] * 256 + msg->pt_data[3]) / 10.0) * 10.0;
+        engine_rpm.currentValue = round((msg->data[2] * 256 + msg->data[3]) / 10.0) * 10.0;
         increment_counter(&engine_rpm);
         
         engine_clt.previousValue = engine_clt.currentValue;
-        engine_clt.currentValue = (msg->pt_data[4] * 256 + msg->pt_data[5]) / 10.0;
+        engine_clt.currentValue = (msg->data[4] * 256 + msg->data[5]) / 10.0;
         if(startupCLT == STARTUP_CLT_VALUE)
         {
           startupCLT = engine_clt.currentValue;
@@ -662,84 +694,84 @@ void processCanMessage(volatile st_cmd_t* msg)
         increment_counter(&engine_clt);
         
         engine_tps.previousValue = engine_tps.currentValue;
-        engine_tps.currentValue = (msg->pt_data[6] * 256 + msg->pt_data[7]) / 10.0;
+        engine_tps.currentValue = (msg->data[6] * 256 + msg->data[7]) / 10.0;
         increment_counter(&engine_tps);
         
         break;
       case 1513:
         engine_pw1.previousValue = engine_pw1.currentValue;
-        engine_pw1.currentValue = (msg->pt_data[0] * 256 + msg->pt_data[1]) / 1000.0;
+        engine_pw1.currentValue = (msg->data[0] * 256 + msg->data[1]) / 1000.0;
         increment_counter(&engine_pw1);
 
         engine_pw2.previousValue = engine_pw2.currentValue;
-        engine_pw2.currentValue = (msg->pt_data[2] * 256 + msg->pt_data[3]) / 1000.0;
+        engine_pw2.currentValue = (msg->data[2] * 256 + msg->data[3]) / 1000.0;
         increment_counter(&engine_pw2);
 
         engine_iat.previousValue = engine_iat.currentValue;
-        engine_iat.currentValue = (msg->pt_data[4] * 256 + msg->pt_data[5]) / 10.0;
+        engine_iat.currentValue = (msg->data[4] * 256 + msg->data[5]) / 10.0;
         increment_counter(&engine_iat);
 
         engine_adv.previousValue = engine_adv.currentValue;
-        engine_adv.currentValue = (msg->pt_data[6] * 256 + msg->pt_data[7]) / 10.0;
+        engine_adv.currentValue = (msg->data[6] * 256 + msg->data[7]) / 10.0;
         increment_counter(&engine_adv);
         
         break;
       case 1514:
         engine_tgt.previousValue = engine_tgt.currentValue;
-        engine_tgt.currentValue = (double)msg->pt_data[0] / 10.0;
+        engine_tgt.currentValue = (double)msg->data[0] / 10.0;
         increment_counter(&engine_tgt);
 
         engine_afr.previousValue = engine_afr.currentValue;
-        engine_afr.currentValue = (double)msg->pt_data[1] / 10.0;
+        engine_afr.currentValue = (double)msg->data[1] / 10.0;
         increment_counter(&engine_afr);
 
         engine_ego.previousValue = engine_ego.currentValue;
-        engine_ego.currentValue = (msg->pt_data[2] * 256 + msg->pt_data[3]) / 10.0;
+        engine_ego.currentValue = (msg->data[2] * 256 + msg->data[3]) / 10.0;
         increment_counter(&engine_ego);
 
         engine_egt.previousValue = engine_egt.currentValue;
-        engine_egt.currentValue = (msg->pt_data[4] * 256 + msg->pt_data[5]) / 10.0;
+        engine_egt.currentValue = (msg->data[4] * 256 + msg->data[5]) / 10.0;
         increment_counter(&engine_egt);
 
         engine_pws.previousValue = engine_pws.currentValue;
-        engine_pws.currentValue = (msg->pt_data[6] * 256 + msg->pt_data[7]) / 1000.0;
+        engine_pws.currentValue = (msg->data[6] * 256 + msg->data[7]) / 1000.0;
         increment_counter(&engine_pws);
         
         break;
       case 1515:
         engine_bat.previousValue = engine_bat.currentValue;
-        engine_bat.currentValue = (msg->pt_data[0] * 256 + msg->pt_data[1]) / 10.0;
+        engine_bat.currentValue = (msg->data[0] * 256 + msg->data[1]) / 10.0;
         increment_counter(&engine_bat);
 
         //not tested
         engine_sr1.previousValue = engine_sr1.currentValue;
-        engine_sr1.currentValue = (msg->pt_data[2] * 256 + msg->pt_data[3]) / 10.0;
+        engine_sr1.currentValue = (msg->data[2] * 256 + msg->data[3]) / 10.0;
         increment_counter(&engine_sr1);
 
         //not tested
         engine_sr2.previousValue = engine_sr2.currentValue;
-        engine_sr2.currentValue = (msg->pt_data[4] * 256 + msg->pt_data[5]) / 10.0;
+        engine_sr2.currentValue = (msg->data[4] * 256 + msg->data[5]) / 10.0;
         increment_counter(&engine_sr2);
 
         //not tested
         engine_knk.previousValue = engine_knk.currentValue;
-        engine_knk.currentValue = (msg->pt_data[6] * 256) / 10.0;
+        engine_knk.currentValue = (msg->data[6] * 256) / 10.0;
         increment_counter(&engine_knk);
 
         break;
       case 1516:
         //not tested
         engine_vss.previousValue = engine_vss.currentValue;
-        engine_vss.currentValue = (msg->pt_data[0] * 256 + msg->pt_data[1]) / 10.0;
+        engine_vss.currentValue = (msg->data[0] * 256 + msg->data[1]) / 10.0;
         increment_counter(&engine_vss);
 
         //not tested
         engine_tcr.previousValue = engine_tcr.currentValue;
-        engine_tcr.currentValue = (msg->pt_data[2] * 256 + msg->pt_data[3]) / 10.0;
+        engine_tcr.currentValue = (msg->data[2] * 256 + msg->data[3]) / 10.0;
         increment_counter(&engine_tcr);
 
         engine_lct.previousValue = engine_lct.currentValue;
-        engine_lct.previousValue = (msg->pt_data[4] * 256 + msg->pt_data[5]) / 10.0;
+        engine_lct.previousValue = (msg->data[4] * 256 + msg->data[5]) / 10.0;
         increment_counter(&engine_lct);
         
         break;
@@ -758,8 +790,8 @@ void serialPrintCanData(volatile canData *canMsg)
   sprintf(textBuffer,"data ");
   Serial.print(textBuffer);
   for (int i =0; i < 8; i++){
-    sprintf(textBuffer,"%02X ",canMsg->data[i]);
-    Serial.print(textBuffer);
+    //sprintf(textBuffer,"%02X ", canMsg->data[i]);
+    //Serial.print(textBuffer);
   }
   Serial.print("\r\n");
 }
