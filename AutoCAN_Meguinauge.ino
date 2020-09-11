@@ -18,22 +18,22 @@
 
 // CAN BUS OBJECTS //////////////////////////////////////////////
 
-struct CanVariable
-{
-  int id;
-  bool filled;
-  byte data[8];
-};
+// struct CanVariable
+// {
+//   int id;
+//   bool filled;
+//   byte data[8];
+// };
 
-int canIDs[] = {1512,1513,1514,1515,1516};
+// int canIDs[] = {1512,1513,1514,1515,1516};
 
-const byte CAN_MESSAGE_COUNT = 5;
-CanVariable* allCan[CAN_MESSAGE_COUNT];
-CanVariable can1512 = {1512, false, NULL};
-CanVariable can1513 = {1513, false, NULL};
-CanVariable can1514 = {1514, false, NULL};
-CanVariable can1515 = {1515, false, NULL};
-CanVariable can1516 = {1516, false, NULL};
+// const byte CAN_MESSAGE_COUNT = 5;
+// CanVariable* allCan[CAN_MESSAGE_COUNT];
+// CanVariable can1512 = {1512, false, NULL};
+// CanVariable can1513 = {1513, false, NULL};
+// CanVariable can1514 = {1514, false, NULL};
+// CanVariable can1515 = {1515, false, NULL};
+// CanVariable can1516 = {1516, false, NULL};
 
 
 uint8_t canBuffer[8] = {};
@@ -166,51 +166,95 @@ void(* resetFunc) (void) = 0; //declare killswitch function
 volatile unsigned long canCount = 0;
 volatile st_cmd_t canMsg;
 
+typedef struct {
+  U8* data;
+  U16 id;
+} canData;
+
+ volatile canData can1512;
+ volatile canData can1513;
+ volatile canData can1514;
+ volatile canData can1515;
+ volatile canData can1516;
+volatile canData canTemp;
+
 ISR(CANIT_vect) {
   canCount++;
 
-    unsigned i;   
-    char save_canpage=CANPAGE;   
-       
-    unsigned mob=CANHPMOB; // get highest prio mob   
-    CANPAGE = mob & 0xf0;   
-    mob >>= 4; // -> mob number 0..15   
-    //ASSERT( (CANSTMOB & ~0xa0) ==0); // allow only RX ready and DLC warning   
-      
-    canMsg.id.std = (CANIDT2>>5) | (CANIDT1 <<3);
+  unsigned i;   
+  char save_canpage=CANPAGE;   
+  
+  unsigned mob = CANHPMOB; // get highest prio mob   
+  CANPAGE = mob & 0xf0;   
+  mob >>= 4; // -> mob number 0..15   
+  //ASSERT( (CANSTMOB & ~0xa0) ==0); // allow only RX ready and DLC warning   
     
-    register char length; 
-    length=CANCDMOB & 0x0f;   
-    for (i = 0; i <length; ++i)   
+  canMsg.id.std = (CANIDT2>>5) | (CANIDT1 <<3);
+  canTemp.id = (CANIDT2>>5) | (CANIDT1 <<3);
+  
+  register char length; 
+  length = CANCDMOB & 0x0f;
+  clearBuffer(canTemp.data[0]);
+  for (i = 0; i <length; ++i)   
+  {
+    canMsg.pt_data[i] = CANMSG;
+    canTemp.data[i] = CANMSG;
+  }   
+  
+  CANSTMOB = 0;           // reset INT reason   
+  CANCDMOB = 0x80;        // re-enable RX on this channel   
+  CANPAGE = save_canpage; // restore CANPAGE   
+
+  if(true) 
+  {
+    switch(canTemp.id)
     {
-      canMsg.pt_data[i] = CANMSG;
-    }   
-    
-    CANSTMOB=0;     // reset INT reason   
-    CANCDMOB=0x80;  // re-enable RX on this channel   
-    //canlist[ mob]( &packet, mob);   
-    CANPAGE=save_canpage;   // restore CANPAGE   
+      case 1512:
+        clearBuffer(can1512.data[0]);
+        can1512.id = canTemp.id;
+        for(int i = 0; i < 8; i++)
+        {
+          can1512.data[i] = canTemp.data[i];
+        }
+        break;
+      case 1513:
+        clearBuffer(can1513.data[0]);
+        can1513.id = canTemp.id;
+        for(int i = 0; i < 8; i++)
+        {
+          can1513.data[i] = canTemp.data[i];
+        }
+        break;
+      case 1514:
+        clearBuffer(can1514.data[0]);
+        can1514.id = canTemp.id;
+        for(int i = 0; i < 8; i++)
+        {
+          can1514.data[i] = canTemp.data[i];
+        }
+        break;
+      case 1515:
+        clearBuffer(can1515.data[0]);
+        can1515.id = canTemp.id;
+        for(int i = 0; i < 8; i++)
+        {
+          can1515.data[i] = canTemp.data[i];
+        }
+        break;
+      case 1516:
+        clearBuffer(can1516.data[0]);
+        can1516.id = canTemp.id;
+        for(int i = 0; i < 8; i++)
+        {
+          can1516.data[i] = canTemp.data[i];
+        }
+        //memcpy(can1516, canTemp, sizeof(canTemp));
+        //can1516 = canTemp;
+        break;
+    }
+    clearBuffer(canTemp.data[0]);
+  }
 
-
-
-
-
-
-
-
-      // if RXOK is set
-    // if ( ( CANSTMOB & (1 << RXOK) ) == (1 << RXOK) )  
-    // {
-    //     for (int i=0; i<8; i++) { canMsg.pt_data[i] = CANMSG; } 
-    //     canMsg.id.std = CANIDM;
-    //     // reset RXOK w/ read-mod-write
-    //     //CANSTMOB &= ~(1 << RXOK);                    
-    // }
-
-    //CANCDMOB = 0x88;
-
-    //Can_mob_abort();        // Freed the MOB
-    //Can_clear_status_mob(); //   and reset MOb status
 }
 
 void setup() {
@@ -221,11 +265,11 @@ void setup() {
   pinMode(LED_SHIFT, OUTPUT);
   pinMode(BUTTON_PIN, INPUT_PULLUP);
   
-  allCan[0] = &can1512;
-  allCan[1] = &can1513;
-  allCan[2] = &can1514;
-  allCan[3] = &can1515;
-  allCan[4] = &can1516;
+  // allCan[0] = &can1512;
+  // allCan[1] = &can1513;
+  // allCan[2] = &can1514;
+  // allCan[3] = &can1515;
+  // allCan[4] = &can1516;
 
   #pragma region set allGauges
   allGauges[0] = &engine_map;
@@ -315,9 +359,6 @@ void setup() {
   bootAnimation();
 
 
-
-
-
   clearBuffer(&canBuffer[0]);
   canMsg.cmd      = CMD_RX_DATA;
   canMsg.pt_data  = &canBuffer[0];
@@ -334,10 +375,15 @@ void loop() {
   
   //Serial.println(canCount);
 
-
+  serialPrintCanData(&can1512);
+  serialPrintCanData(&can1513);
+  serialPrintCanData(&can1514);
+  serialPrintCanData(&can1515);
+  serialPrintCanData(&can1516);
+  Serial.println("=====");
   serialPrintData(&canMsg);
 
-  processCanMessage(&canMsg);
+  //processCanMessage(&canMsg);
 
   //loadFromCan();
 
@@ -482,115 +528,115 @@ void drawRuntime()
   writeToDisplay(formattedRuntime, 1, 9);
 }
 
-void resetCanVariables() {
-  for(int i = 0; i < CAN_MESSAGE_COUNT; i++) 
-  {
-    allCan[i]->filled = false;
-  }
-}
+// void resetCanVariables() {
+//   for(int i = 0; i < CAN_MESSAGE_COUNT; i++) 
+//   {
+//     allCan[i]->filled = false;
+//   }
+// }
 
 int loadFromCan() {
 
-  clearBuffer(&canBuffer[0]);
-  canMsg.cmd      = CMD_RX_DATA;
-  canMsg.pt_data  = &canBuffer[0];
-  canMsg.ctrl.ide = MESSAGE_PROTOCOL; 
-  canMsg.id.std   = 0;
-  canMsg.id.ext   = 0;
-  canMsg.dlc      = MESSAGE_LENGTH;
-  canMsg.ctrl.rtr = MESSAGE_RTR;
+  // //clearBuffer(&canBuffer[0]);
+  // canMsg.cmd      = CMD_RX_DATA;
+  // canMsg.pt_data  = &canBuffer[0];
+  // canMsg.ctrl.ide = MESSAGE_PROTOCOL; 
+  // canMsg.id.std   = 0;
+  // canMsg.id.ext   = 0;
+  // canMsg.dlc      = MESSAGE_LENGTH;
+  // canMsg.ctrl.rtr = MESSAGE_RTR;
 
-  while(can_cmd(&canMsg) != CAN_CMD_ACCEPTED);
+  // while(can_cmd(&canMsg) != CAN_CMD_ACCEPTED);
 
-  // Wait for the command to be accepted by the controller
-  while(can_cmd(&canMsg) != CAN_CMD_ACCEPTED);
-
-
-  unsigned long start = millis();
+  // // Wait for the command to be accepted by the controller
+  // while(can_cmd(&canMsg) != CAN_CMD_ACCEPTED);
 
 
-  bool got1512 = false;
-  bool got1513 = false;
-  bool got1514 = false;
-  bool got1515 = false;
-  bool got1516 = false;
+  // unsigned long start = millis();
 
-  int pollCount = 0;
-  while((pollCount < 100) && (!got1512 || !got1513 || !got1514 || !got1515 || !got1516))
-  {
-    pollCount++;
-    canMsg.cmd      = CMD_RX_DATA;
-    canMsg.ctrl.ide = MESSAGE_PROTOCOL; 
-    canMsg.dlc      = MESSAGE_LENGTH;
-    canMsg.ctrl.rtr = MESSAGE_RTR;
-    while(can_cmd(&canMsg) != CAN_CMD_ACCEPTED);
-    while(can_get_status(&canMsg) == CAN_STATUS_NOT_COMPLETED);
-    switch(canMsg.id.std)
-    {
-      case 1512:
-        if(!got1512)
-        {
-          got1512 = true;
-          Serial.println("got1512");
-         // processCanMessage(canMsg);
-        }
-        break;
-      case 1513:
-        if(!got1513)
-        {
-          got1513 = true;
-          Serial.println("got1513");
-          //processCanMessage(canMsg);
-        }
-        break;
-      case 1514:
-        if(!got1514)
-        {
-          got1514 = true;
-          Serial.println("got1514");
-          //processCanMessage(canMsg);
-        }
-        break;
-      case 1515:
-        if(!got1515)
-        {
-          got1515 = true;
-          Serial.println("got1515");
-          //processCanMessage(canMsg);
-        }
-        break;
-      case 1516:
-        if(!got1516)
-        {
-          got1516 = true;
-          Serial.println("got1516");
-          //processCanMessage(canMsg);
-        }
-        break;
-      default:
-        break;
-    }
+
+  // bool got1512 = false;
+  // bool got1513 = false;
+  // bool got1514 = false;
+  // bool got1515 = false;
+  // bool got1516 = false;
+
+  // int pollCount = 0;
+  // while((pollCount < 100) && (!got1512 || !got1513 || !got1514 || !got1515 || !got1516))
+  // {
+  //   pollCount++;
+  //   canMsg.cmd      = CMD_RX_DATA;
+  //   canMsg.ctrl.ide = MESSAGE_PROTOCOL; 
+  //   canMsg.dlc      = MESSAGE_LENGTH;
+  //   canMsg.ctrl.rtr = MESSAGE_RTR;
+  //   while(can_cmd(&canMsg) != CAN_CMD_ACCEPTED);
+  //   while(can_get_status(&canMsg) == CAN_STATUS_NOT_COMPLETED);
+  //   switch(canMsg.id.std)
+  //   {
+  //     case 1512:
+  //       if(!got1512)
+  //       {
+  //         got1512 = true;
+  //         Serial.println("got1512");
+  //        // processCanMessage(canMsg);
+  //       }
+  //       break;
+  //     case 1513:
+  //       if(!got1513)
+  //       {
+  //         got1513 = true;
+  //         Serial.println("got1513");
+  //         //processCanMessage(canMsg);
+  //       }
+  //       break;
+  //     case 1514:
+  //       if(!got1514)
+  //       {
+  //         got1514 = true;
+  //         Serial.println("got1514");
+  //         //processCanMessage(canMsg);
+  //       }
+  //       break;
+  //     case 1515:
+  //       if(!got1515)
+  //       {
+  //         got1515 = true;
+  //         Serial.println("got1515");
+  //         //processCanMessage(canMsg);
+  //       }
+  //       break;
+  //     case 1516:
+  //       if(!got1516)
+  //       {
+  //         got1516 = true;
+  //         Serial.println("got1516");
+  //         //processCanMessage(canMsg);
+  //       }
+  //       break;
+  //     default:
+  //       break;
+  //   }
     
     
-    //processCanMessage(canMsg);
-  }
-  Serial.println(pollCount);
-  if(pollCount == 100)
-  {
-    Serial.println("=====");
-    digitalWrite(LED_BUILTIN, HIGH);
-    writeToDisplay("CAN BUS ERROR");
-    delay(1000);
-    clearDisplay();
-  }
-  else
-  {
-    digitalWrite(LED_BUILTIN, LOW);
-    Serial.println("===============================");
-  }
-  unsigned long end = millis();
-  unsigned long diff = end - start;
-  return 0;
+  //   //processCanMessage(canMsg);
+  // }
+  // Serial.println(pollCount);
+  // if(pollCount == 100)
+  // {
+  //   Serial.println("=====");
+  //   digitalWrite(LED_BUILTIN, HIGH);
+  //   writeToDisplay("CAN BUS ERROR");
+  //   delay(1000);
+  //   clearDisplay();
+  // }
+  // else
+  // {
+  //   digitalWrite(LED_BUILTIN, LOW);
+  //   Serial.println("===============================");
+  // }
+  // unsigned long end = millis();
+  // unsigned long diff = end - start;
+  // return 0;
 }
 
 void processCanMessage(volatile st_cmd_t* msg)
@@ -702,6 +748,20 @@ void processCanMessage(volatile st_cmd_t* msg)
         break;
     }
 
+}
+
+void serialPrintCanData(volatile canData *canMsg)
+{
+  char textBuffer[50] = {0};
+  sprintf(textBuffer,"id %04x ",canMsg->id);
+  Serial.print(textBuffer);
+  sprintf(textBuffer,"data ");
+  Serial.print(textBuffer);
+  for (int i =0; i < 8; i++){
+    sprintf(textBuffer,"%02X ",canMsg->data[i]);
+    Serial.print(textBuffer);
+  }
+  Serial.print("\r\n");
 }
 
 void serialPrintData(volatile st_cmd_t *msg){
