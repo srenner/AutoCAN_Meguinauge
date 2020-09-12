@@ -198,16 +198,16 @@ ISR(CANIT_vect) {
   //ASSERT( (CANSTMOB & ~0xa0) ==0); // allow only RX ready and DLC warning   
     
   canMsg.id.std = (CANIDT2>>5) | (CANIDT1 <<3);
-  canTemp.id = (CANIDT2>>5) | (CANIDT1 <<3);
+  //canTemp.id = (CANIDT2>>5) | (CANIDT1 <<3);
   
   register char length; 
   length = CANCDMOB & 0x0f;
   //clearBuf(&canTemp.data);
   for (i = 0; i <length; ++i)   
   {
-    //canMsg.pt_data[i] = CANMSG;
+    canMsg.pt_data[i] = CANMSG;
     //canTemp.data[i] = 0x00;
-    canTemp.data[i] = CANMSG;
+    //canTemp.data[i] = CANMSG;
   }   
   
   CANSTMOB = 0;           // reset INT reason   
@@ -396,11 +396,13 @@ void setup() {
 
 void loop() {
   
-  //Serial.println(canCount);
+  Serial.println(canCount);
   
   //serialPrintData(&canMsg);
   
-  serialPrintCanData(&can1512);
+  //noInterrupts();
+  //serialPrintCanData(&can1512);
+  //interrupts();
   //serialPrintCanData(&can1513);
   //serialPrintCanData(&can1514);
   //serialPrintCanData(&can1515);
