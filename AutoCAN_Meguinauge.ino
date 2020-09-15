@@ -381,8 +381,6 @@ void setup() {
   if(DEBUG) {
     Serial.println("CAN bus initialized");
   }
-  DisplayInit();
-  bootAnimation();
 
   //clearBuffer(&canBufferTemp[0]);
   //canMsg.pt_data = &canBufferTemp[0];
@@ -397,6 +395,10 @@ void setup() {
   canMsg.ctrl.rtr = MESSAGE_RTR;
 
   while(can_cmd(&canMsg) != CAN_CMD_ACCEPTED);
+
+
+  DisplayInit();
+  bootAnimation();
 }
 
 void loop() {
