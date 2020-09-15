@@ -40,26 +40,26 @@ typedef struct {
   uint8_t* data;
 } canData;
 
-
-#define MSG_1512 0
-#define MSG_1513 1
-#define MSG_1514 2
-#define MSG_1515 3
-#define MSG_1516 4
+#define MS_BASE_ID    1512  // set this to match the MegaSquirt setting, default is 1512
+#define MSG_MS_BASE   0     
+#define MSG_MS_PLUS1  1
+#define MSG_MS_PLUS2  2
+#define MSG_MS_PLUS3  3
+#define MSG_MS_PLUS4  4
 
 volatile canData* allCanMessages[5];
 
-volatile canData can1512;
-volatile canData can1513;
-volatile canData can1514;
-volatile canData can1515;
-volatile canData can1516;
+volatile canData canBase;
+volatile canData canPlus1;
+volatile canData canPlus2;
+volatile canData canPlus3;
+volatile canData canPlus4;
 
-uint8_t canBuffer1512[8] = {};
-uint8_t canBuffer1513[8] = {};
-uint8_t canBuffer1514[8] = {};
-uint8_t canBuffer1515[8] = {};
-uint8_t canBuffer1516[8] = {};
+uint8_t canBufferBase[8] = {};
+uint8_t canBufferPlus1[8] = {};
+uint8_t canBufferPlus2[8] = {};
+uint8_t canBufferPlus3[8] = {};
+uint8_t canBufferPlus4[8] = {};
 
 volatile canData canTemp;
 uint8_t canBufferTemp[8] = {};
@@ -192,6 +192,8 @@ void clearBuf(volatile uint8_t* Buffer){
   }
 }
 
+//void test()
+//{
 ISR(CANIT_vect) {
   canCount++;
 
@@ -211,8 +213,8 @@ ISR(CANIT_vect) {
   //clearBuf(canTemp.data[0]);
   for (i = 0; i <length; ++i)   
   {
-    canMsg.pt_data[i] = CANMSG;
-    //canTemp.data[i] = CANMSG;
+    //canMsg.pt_data[i] = CANMSG;
+    canTemp.data[i] = CANMSG;
   }   
   
   CANSTMOB = 0;           // reset INT reason   
@@ -223,25 +225,25 @@ ISR(CANIT_vect) {
   {
     switch(canTemp.id)
     {
-      case 1512: //1512
-        allCanMessages[MSG_1512]->counter++;
-        memcpy(allCanMessages[MSG_1512]->data, canTemp.data, sizeof(canTemp.data));
+      case MS_BASE_ID:
+        allCanMessages[MSG_MS_BASE]->counter++;
+        memcpy(allCanMessages[MSG_MS_BASE]->data, canTemp.data, sizeof(canTemp.data));
         break;
-      case 1513:
-        allCanMessages[MSG_1513]->counter++;
-        memcpy(allCanMessages[MSG_1513]->data, canTemp.data, sizeof(canTemp.data));
+      case MS_BASE_ID + 1:
+        allCanMessages[MSG_MS_PLUS1]->counter++;
+        memcpy(allCanMessages[MSG_MS_PLUS1]->data, canTemp.data, sizeof(canTemp.data));
         break;
-      case 1514:
-        allCanMessages[MSG_1514]->counter++;
-        memcpy(allCanMessages[MSG_1514]->data, canTemp.data, sizeof(canTemp.data));
+      case MS_BASE_ID + 2:
+        allCanMessages[MSG_MS_PLUS2]->counter++;
+        memcpy(allCanMessages[MSG_MS_PLUS2]->data, canTemp.data, sizeof(canTemp.data));
         break;
-      case 1515:
-        allCanMessages[MSG_1515]->counter++;
-        memcpy(allCanMessages[MSG_1515]->data, canTemp.data, sizeof(canTemp.data));
+      case MS_BASE_ID + 3:
+        allCanMessages[MSG_MS_PLUS3]->counter++;
+        memcpy(allCanMessages[MSG_MS_PLUS3]->data, canTemp.data, sizeof(canTemp.data));
         break;
-      case 1516:
-        allCanMessages[MSG_1516]->counter++;
-        memcpy(allCanMessages[MSG_1516]->data, canTemp.data, sizeof(canTemp.data));
+      case MS_BASE_ID + 4:
+        allCanMessages[MSG_MS_PLUS4]->counter++;
+        memcpy(allCanMessages[MSG_MS_PLUS4]->data, canTemp.data, sizeof(canTemp.data));
         break;
       default:
         canUnhandledCount++;
@@ -264,35 +266,35 @@ void setup() {
   clearBuffer(&canBufferTemp[0]);
   canTemp.data = &canBufferTemp[0];
 
-  can1512.id = 1512;
-  can1512.counter = 0;
-  clearBuffer(&canBuffer1512[0]);
-  can1512.data = &canBuffer1512[0];
-  allCanMessages[0] = &can1512;
+  canBase.id = MS_BASE_ID;
+  canBase.counter = 0;
+  clearBuffer(&canBufferBase[0]);
+  canBase.data = &canBufferBase[0];
+  allCanMessages[0] = &canBase;
 
-  can1513.id = 1513;
-  can1513.counter = 0;
-  clearBuffer(&canBuffer1513[0]);
-  can1513.data = &canBuffer1513[0];
-  allCanMessages[1] = &can1513;
+  canPlus1.id = MS_BASE_ID + 1;
+  canPlus1.counter = 0;
+  clearBuffer(&canBufferPlus1[0]);
+  canPlus1.data = &canBufferPlus1[0];
+  allCanMessages[1] = &canPlus1;
   
-  can1514.id = 1514;
-  can1514.counter = 0;
-  clearBuffer(&canBuffer1514[0]);
-  can1514.data = &canBuffer1514[0];
-  allCanMessages[2] = &can1514;
+  canPlus2.id = MS_BASE_ID + 2;
+  canPlus2.counter = 0;
+  clearBuffer(&canBufferPlus2[0]);
+  canPlus2.data = &canBufferPlus2[0];
+  allCanMessages[2] = &canPlus2;
   
-  can1515.id = 1515;
-  can1515.counter = 0;
-  clearBuffer(&canBuffer1515[0]);
-  can1515.data = &canBuffer1515[0];
-  allCanMessages[3] = &can1515;
+  canPlus3.id = MS_BASE_ID + 3;
+  canPlus3.counter = 0;
+  clearBuffer(&canBufferPlus3[0]);
+  canPlus3.data = &canBufferPlus3[0];
+  allCanMessages[3] = &canPlus3;
 
-  can1516.id = 1516;
-  can1516.counter = 0;
-  clearBuffer(&canBuffer1516[0]);
-  can1516.data = &canBuffer1516[0];
-  allCanMessages[4] = &can1516;
+  canPlus4.id = MS_BASE_ID + 4;
+  canPlus4.counter = 0;
+  clearBuffer(&canBufferPlus4[0]);
+  canPlus4.data = &canBufferPlus4[0];
+  allCanMessages[4] = &canPlus4;
 
 
   #pragma region set allGauges
@@ -405,21 +407,22 @@ void loop() {
   
   //Serial.println(canCount);
   noInterrupts();
-  Serial.print(allCanMessages[MSG_1512]->counter);
-  Serial.print(",");
-  Serial.print(allCanMessages[MSG_1513]->counter);
-  Serial.print(",");
-  Serial.print(allCanMessages[MSG_1514]->counter);
-  Serial.print(",");
-  Serial.print(allCanMessages[MSG_1515]->counter);
-  Serial.print(",");
-  Serial.println(allCanMessages[MSG_1516]->counter);
-
   processCanMessages();
   interrupts();
 
 
-
+  if(true)
+  {
+    Serial.print(allCanMessages[MSG_MS_BASE]->counter);
+    Serial.print(",");
+    Serial.print(allCanMessages[MSG_MS_PLUS1]->counter);
+    Serial.print(",");
+    Serial.print(allCanMessages[MSG_MS_PLUS2]->counter);
+    Serial.print(",");
+    Serial.print(allCanMessages[MSG_MS_PLUS3]->counter);
+    Serial.print(",");
+    Serial.println(allCanMessages[MSG_MS_PLUS4]->counter);
+  }
 
 
 
@@ -574,125 +577,22 @@ void drawRuntime()
 //   }
 // }
 
-int loadFromCan() {
-
-  // //clearBuffer(&canBuffer[0]);
-  // canMsg.cmd      = CMD_RX_DATA;
-  // canMsg.pt_data  = &canBuffer[0];
-  // canMsg.ctrl.ide = MESSAGE_PROTOCOL; 
-  // canMsg.id.std   = 0;
-  // canMsg.id.ext   = 0;
-  // canMsg.dlc      = MESSAGE_LENGTH;
-  // canMsg.ctrl.rtr = MESSAGE_RTR;
-
-  // while(can_cmd(&canMsg) != CAN_CMD_ACCEPTED);
-
-  // // Wait for the command to be accepted by the controller
-  // while(can_cmd(&canMsg) != CAN_CMD_ACCEPTED);
-
-
-  // unsigned long start = millis();
-
-
-  // bool got1512 = false;
-  // bool got1513 = false;
-  // bool got1514 = false;
-  // bool got1515 = false;
-  // bool got1516 = false;
-
-  // int pollCount = 0;
-  // while((pollCount < 100) && (!got1512 || !got1513 || !got1514 || !got1515 || !got1516))
-  // {
-  //   pollCount++;
-  //   canMsg.cmd      = CMD_RX_DATA;
-  //   canMsg.ctrl.ide = MESSAGE_PROTOCOL; 
-  //   canMsg.dlc      = MESSAGE_LENGTH;
-  //   canMsg.ctrl.rtr = MESSAGE_RTR;
-  //   while(can_cmd(&canMsg) != CAN_CMD_ACCEPTED);
-  //   while(can_get_status(&canMsg) == CAN_STATUS_NOT_COMPLETED);
-  //   switch(canMsg.id.std)
-  //   {
-  //     case 1512:
-  //       if(!got1512)
-  //       {
-  //         got1512 = true;
-  //         Serial.println("got1512");
-  //        // processCanMessage(canMsg);
-  //       }
-  //       break;
-  //     case 1513:
-  //       if(!got1513)
-  //       {
-  //         got1513 = true;
-  //         Serial.println("got1513");
-  //         //processCanMessage(canMsg);
-  //       }
-  //       break;
-  //     case 1514:
-  //       if(!got1514)
-  //       {
-  //         got1514 = true;
-  //         Serial.println("got1514");
-  //         //processCanMessage(canMsg);
-  //       }
-  //       break;
-  //     case 1515:
-  //       if(!got1515)
-  //       {
-  //         got1515 = true;
-  //         Serial.println("got1515");
-  //         //processCanMessage(canMsg);
-  //       }
-  //       break;
-  //     case 1516:
-  //       if(!got1516)
-  //       {
-  //         got1516 = true;
-  //         Serial.println("got1516");
-  //         //processCanMessage(canMsg);
-  //       }
-  //       break;
-  //     default:
-  //       break;
-  //   }
-    
-    
-  //   //processCanMessage(canMsg);
-  // }
-  // Serial.println(pollCount);
-  // if(pollCount == 100)
-  // {
-  //   Serial.println("=====");
-  //   digitalWrite(LED_BUILTIN, HIGH);
-  //   writeToDisplay("CAN BUS ERROR");
-  //   delay(1000);
-  //   clearDisplay();
-  // }
-  // else
-  // {
-  //   digitalWrite(LED_BUILTIN, LOW);
-  //   Serial.println("===============================");
-  // }
-  // unsigned long end = millis();
-  // unsigned long diff = end - start;
-  // return 0;
-}
 
 void processCanMessages()
 {
 
   engine_map.previousValue = engine_map.currentValue;
-  engine_map.currentValue = ((allCanMessages[MSG_1512]->data[0] * 256) + allCanMessages[MSG_1512]->data[1]) / 10.0;
+  engine_map.currentValue = ((allCanMessages[MSG_MS_BASE]->data[0] * 256) + allCanMessages[MSG_MS_BASE]->data[1]) / 10.0;
   increment_counter(&engine_map);
 
   engine_rpm.previousValue = engine_rpm.currentValue;
   //engine_rpm.currentValue = buf[2] * 256 + buf[3];
   //round rpm to nearest 10
-  engine_rpm.currentValue = round((allCanMessages[MSG_1512]->data[2] * 256 + allCanMessages[MSG_1512]->data[3]) / 10.0) * 10.0;
+  engine_rpm.currentValue = round((allCanMessages[MSG_MS_BASE]->data[2] * 256 + allCanMessages[MSG_MS_BASE]->data[3]) / 10.0) * 10.0;
   increment_counter(&engine_rpm);
   
   engine_clt.previousValue = engine_clt.currentValue;
-  engine_clt.currentValue = (allCanMessages[MSG_1512]->data[4] * 256 + allCanMessages[MSG_1512]->data[5]) / 10.0;
+  engine_clt.currentValue = (allCanMessages[MSG_MS_BASE]->data[4] * 256 + allCanMessages[MSG_MS_BASE]->data[5]) / 10.0;
   if(startupCLT == STARTUP_CLT_VALUE)
   {
     startupCLT = engine_clt.currentValue;
@@ -700,84 +600,84 @@ void processCanMessages()
   increment_counter(&engine_clt);
   
   engine_tps.previousValue = engine_tps.currentValue;
-  engine_tps.currentValue = (allCanMessages[MSG_1512]->data[6] * 256 + allCanMessages[MSG_1512]->data[7]) / 10.0;
+  engine_tps.currentValue = (allCanMessages[MSG_MS_BASE]->data[6] * 256 + allCanMessages[MSG_MS_BASE]->data[7]) / 10.0;
   increment_counter(&engine_tps);
 
   ////////////////////        
 
   engine_pw1.previousValue = engine_pw1.currentValue;
-  engine_pw1.currentValue = (allCanMessages[MSG_1513]->data[0] * 256 + allCanMessages[MSG_1513]->data[1]) / 1000.0;
+  engine_pw1.currentValue = (allCanMessages[MSG_MS_PLUS1]->data[0] * 256 + allCanMessages[MSG_MS_PLUS1]->data[1]) / 1000.0;
   increment_counter(&engine_pw1);
 
   engine_pw2.previousValue = engine_pw2.currentValue;
-  engine_pw2.currentValue = (allCanMessages[MSG_1513]->data[2] * 256 + allCanMessages[MSG_1513]->data[3]) / 1000.0;
+  engine_pw2.currentValue = (allCanMessages[MSG_MS_PLUS1]->data[2] * 256 + allCanMessages[MSG_MS_PLUS1]->data[3]) / 1000.0;
   increment_counter(&engine_pw2);
 
   engine_iat.previousValue = engine_iat.currentValue;
-  engine_iat.currentValue = (allCanMessages[MSG_1513]->data[4] * 256 + allCanMessages[MSG_1513]->data[5]) / 10.0;
+  engine_iat.currentValue = (allCanMessages[MSG_MS_PLUS1]->data[4] * 256 + allCanMessages[MSG_MS_PLUS1]->data[5]) / 10.0;
   increment_counter(&engine_iat);
 
   engine_adv.previousValue = engine_adv.currentValue;
-  engine_adv.currentValue = (allCanMessages[MSG_1513]->data[6] * 256 + allCanMessages[MSG_1513]->data[7]) / 10.0;
+  engine_adv.currentValue = (allCanMessages[MSG_MS_PLUS1]->data[6] * 256 + allCanMessages[MSG_MS_PLUS1]->data[7]) / 10.0;
   increment_counter(&engine_adv);
 
   ////////////////////
         
   engine_tgt.previousValue = engine_tgt.currentValue;
-  engine_tgt.currentValue = (double)allCanMessages[MSG_1514]->data[0] / 10.0;
+  engine_tgt.currentValue = (double)allCanMessages[MSG_MS_PLUS2]->data[0] / 10.0;
   increment_counter(&engine_tgt);
 
   engine_afr.previousValue = engine_afr.currentValue;
-  engine_afr.currentValue = (double)allCanMessages[MSG_1514]->data[1] / 10.0;
+  engine_afr.currentValue = (double)allCanMessages[MSG_MS_PLUS2]->data[1] / 10.0;
   increment_counter(&engine_afr);
 
   engine_ego.previousValue = engine_ego.currentValue;
-  engine_ego.currentValue = (allCanMessages[MSG_1514]->data[2] * 256 + allCanMessages[MSG_1514]->data[3]) / 10.0;
+  engine_ego.currentValue = (allCanMessages[MSG_MS_PLUS2]->data[2] * 256 + allCanMessages[MSG_MS_PLUS2]->data[3]) / 10.0;
   increment_counter(&engine_ego);
 
   engine_egt.previousValue = engine_egt.currentValue;
-  engine_egt.currentValue = (allCanMessages[MSG_1514]->data[4] * 256 + allCanMessages[MSG_1514]->data[5]) / 10.0;
+  engine_egt.currentValue = (allCanMessages[MSG_MS_PLUS2]->data[4] * 256 + allCanMessages[MSG_MS_PLUS2]->data[5]) / 10.0;
   increment_counter(&engine_egt);
 
   engine_pws.previousValue = engine_pws.currentValue;
-  engine_pws.currentValue = (allCanMessages[MSG_1514]->data[6] * 256 + allCanMessages[MSG_1514]->data[7]) / 1000.0;
+  engine_pws.currentValue = (allCanMessages[MSG_MS_PLUS2]->data[6] * 256 + allCanMessages[MSG_MS_PLUS2]->data[7]) / 1000.0;
   increment_counter(&engine_pws);
         
   ////////////////////
 
   engine_bat.previousValue = engine_bat.currentValue;
-  engine_bat.currentValue = (allCanMessages[MSG_1515]->data[0] * 256 + allCanMessages[MSG_1515]->data[1]) / 10.0;
+  engine_bat.currentValue = (allCanMessages[MSG_MS_PLUS3]->data[0] * 256 + allCanMessages[MSG_MS_PLUS3]->data[1]) / 10.0;
   increment_counter(&engine_bat);
 
   //not tested
   engine_sr1.previousValue = engine_sr1.currentValue;
-  engine_sr1.currentValue = (allCanMessages[MSG_1515]->data[2] * 256 + allCanMessages[MSG_1515]->data[3]) / 10.0;
+  engine_sr1.currentValue = (allCanMessages[MSG_MS_PLUS3]->data[2] * 256 + allCanMessages[MSG_MS_PLUS3]->data[3]) / 10.0;
   increment_counter(&engine_sr1);
 
   //not tested
   engine_sr2.previousValue = engine_sr2.currentValue;
-  engine_sr2.currentValue = (allCanMessages[MSG_1515]->data[4] * 256 + allCanMessages[MSG_1515]->data[5]) / 10.0;
+  engine_sr2.currentValue = (allCanMessages[MSG_MS_PLUS3]->data[4] * 256 + allCanMessages[MSG_MS_PLUS3]->data[5]) / 10.0;
   increment_counter(&engine_sr2);
 
   //not tested
   engine_knk.previousValue = engine_knk.currentValue;
-  engine_knk.currentValue = (allCanMessages[MSG_1515]->data[6] * 256) / 10.0;
+  engine_knk.currentValue = (allCanMessages[MSG_MS_PLUS3]->data[6] * 256) / 10.0;
   increment_counter(&engine_knk);
 
   ////////////////////
 
   //not tested
   engine_vss.previousValue = engine_vss.currentValue;
-  engine_vss.currentValue = (allCanMessages[MSG_1516]->data[0] * 256 + allCanMessages[MSG_1516]->data[1]) / 10.0;
+  engine_vss.currentValue = (allCanMessages[MSG_MS_PLUS4]->data[0] * 256 + allCanMessages[MSG_MS_PLUS4]->data[1]) / 10.0;
   increment_counter(&engine_vss);
 
   //not tested
   engine_tcr.previousValue = engine_tcr.currentValue;
-  engine_tcr.currentValue = (allCanMessages[MSG_1516]->data[2] * 256 + allCanMessages[MSG_1516]->data[3]) / 10.0;
+  engine_tcr.currentValue = (allCanMessages[MSG_MS_PLUS4]->data[2] * 256 + allCanMessages[MSG_MS_PLUS4]->data[3]) / 10.0;
   increment_counter(&engine_tcr);
 
   engine_lct.previousValue = engine_lct.currentValue;
-  engine_lct.previousValue = (allCanMessages[MSG_1516]->data[4] * 256 + allCanMessages[MSG_1516]->data[5]) / 10.0;
+  engine_lct.previousValue = (allCanMessages[MSG_MS_PLUS4]->data[4] * 256 + allCanMessages[MSG_MS_PLUS4]->data[5]) / 10.0;
   increment_counter(&engine_lct);
         
 }
@@ -792,37 +692,6 @@ void serialPrintCanData(volatile canData *canMsg)
   for (int i =0; i < 8; i++){
     //sprintf(textBuffer,"%02X ", canMsg->data[i]);
     //Serial.print(textBuffer);
-  }
-  Serial.print("\r\n");
-}
-
-void serialPrintData(volatile st_cmd_t *msg){
-  char textBuffer[50] = {0};
-  if (msg->ctrl.ide>0){
-    sprintf(textBuffer,"id %d ",msg->id.ext);
-  }
-  else
-  {
-    sprintf(textBuffer,"id %04x ",msg->id.std);
-  }
-  Serial.print(textBuffer);
-  
-  //  IDE
-  sprintf(textBuffer,"ide %d ",msg->ctrl.ide);
-  Serial.print(textBuffer);
-  //  RTR
-  sprintf(textBuffer,"rtr %d ",msg->ctrl.rtr);
-  Serial.print(textBuffer);
-  //  DLC
-  sprintf(textBuffer,"dlc %d ",msg->dlc);
-  Serial.print(textBuffer);
-  //  Data
-  sprintf(textBuffer,"data ");
-  Serial.print(textBuffer);
-  
-  for (int i =0; i<msg->dlc; i++){
-    sprintf(textBuffer,"%02X ",msg->pt_data[i]);
-    Serial.print(textBuffer);
   }
   Serial.print("\r\n");
 }
