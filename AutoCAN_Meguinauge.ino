@@ -252,7 +252,7 @@ ISR(CANIT_vect) {
 
 void setup() {
 
-  DisplayInit();
+  //DisplayInit();
 
   pinMode(LED_ERR, OUTPUT);
   pinMode(LED_SHIFT, OUTPUT);
@@ -381,7 +381,7 @@ void setup() {
   if(DEBUG) {
     Serial.println("CAN bus initialized");
   }
-  clearDisplay();
+  DisplayInit();
   bootAnimation();
 
   //clearBuffer(&canBufferTemp[0]);

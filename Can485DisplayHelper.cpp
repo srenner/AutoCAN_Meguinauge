@@ -14,77 +14,6 @@ void DisplayInit() {
     //lcd.write(0x7C);
     //lcd.write(157);
 
-    //create custom chars
-    byte fill1[8] = {
-        0x10,
-        0x10,
-        0x10,
-        0x10,
-        0x10,
-        0x10,
-        0x10,
-        0x10
-    };
-    byte fill2[8] = {
-        0x18,
-        0x18,
-        0x18,
-        0x18,
-        0x18,
-        0x18,
-        0x18,
-        0x18
-    };
-    byte fill3[8] = {
-        0x1C,
-        0x1C,
-        0x1C,
-        0x1C,
-        0x1C,
-        0x1C,
-        0x1C,
-        0x1C
-    };
-    byte fill4[8] = {
-        0x1E,
-        0x1E,
-        0x1E,
-        0x1E,
-        0x1E,
-        0x1E,
-        0x1E,
-        0x1E
-    };
-    byte fill5[8] = {
-        0x1F,
-        0x1F,
-        0x1F,
-        0x1F,
-        0x1F,
-        0x1F,
-        0x1F,
-        0x1F
-    };
-    byte fillMiddle[8] = {
-        0x04,
-        0x04,
-        0x04,
-        0x04,
-        0x04,
-        0x04,
-        0x04,
-        0x04  
-    };
-    
-    if(false) {
-        createCustomChar(0, fill1);
-        createCustomChar(1, fill2);
-        createCustomChar(2, fill3);
-        createCustomChar(3, fill4);
-        createCustomChar(4, fill5);
-        createCustomChar(5, fillMiddle);
-    }
-
 }
 
 void setCursorPosition(int row, int column) {
@@ -102,13 +31,6 @@ void clearDisplay() {
     lcd.write(0x01);
 }
 
-//writes the current display as the splash screen (not reliable)
-void setSplash() {
-    lcd.write(SETTING_COMMAND);
-    lcd.write(0x09);
-    delay(500); 
-}
-
 void writeToDisplay(char *content) {
     clearDisplay();
     setCursorPosition(1,1);
@@ -122,11 +44,8 @@ void writeToDisplay(char *content, int row, int column) {
 
 void writeToDisplay(float content, int decimalPlaces, int row, int column) {
     setCursorPosition(row, column);
-    
     static char outstr[15];
     dtostrf(content,4, decimalPlaces, outstr);
-    
-    
     lcd.write(outstr);
 }
 
@@ -139,36 +58,3 @@ void writeSpecialToDisplay(int content, int row, int column) {
     lcd.write(content);
 }
 
-void createCustomChar(int pos, byte data[]) {
-
-
-    lcd.write(SETTING_COMMAND);
-    lcd.write(0x4E);
-    lcd.write((uint8_t)pos);
-    for(int i = 0; i < 8; i++) {
-        lcd.write(data[i]);
-    }
-    delay(50);
-}
-
-void printCustomChars() {
-    clearDisplay();
-    setCursorPosition(1,1);
-}
-
-/*
-void SerLCD::createChar(byte location, byte charmap[])
-{
-  location &= 0x7; // we only have 8 locations 0-7
-  beginTransmission();
-  //Send request to create a customer character
-  transmit(SETTING_COMMAND); //Put LCD into setting mode
-  transmit(27 + location);
-  for (int i = 0; i < 8; i++)
-  {
-    transmit(charmap[i]);
-  } // for
-  endTransmission();
-  delay(50); //This takes a bit longer
-}
-*/
