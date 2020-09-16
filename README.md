@@ -8,7 +8,7 @@
 
 ## Hardware Details
 * [Arduino-compatible AST-CAN485 Dev Board](https://www.sparkfun.com/products/14483)
-* 16x2 LCD display with serial communication
+* 16x2 LCD display with I2C communication
 * 2 LEDs
   * 'Check Engine' light
   * Shift light
