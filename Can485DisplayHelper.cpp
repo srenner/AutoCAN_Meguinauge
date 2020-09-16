@@ -7,7 +7,7 @@ AltSoftSerial lcd;
 
 void DisplayInit() {
     lcd.begin(9600);
-    delay(500); //wait for bootup
+    delay(250); //wait for bootup
     clearDisplay();
 
     //set brightness (128-157)

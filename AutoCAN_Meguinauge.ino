@@ -251,7 +251,8 @@ void fillCanDataBuffer(int index, canData* canTemp)
 }
 
 void setup() {
-  //DisplayInit();
+  DisplayInit();
+  bootAnimation();
 
   pinMode(LED_ERR, OUTPUT);
   pinMode(LED_SHIFT, OUTPUT);
@@ -395,8 +396,7 @@ void setup() {
   while(can_cmd(&canMsg) != CAN_CMD_ACCEPTED);
 
 
-  DisplayInit();
-  bootAnimation();
+
 
   //datasheet section 7.3 Watchdog Timer
   //enable watchdog timer (WDCE, WDE) and set timing (WDP0, WDP1)
