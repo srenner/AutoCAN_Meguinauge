@@ -9,7 +9,6 @@
   ===================
   - setting DEBUG true outputs messages to the serial port
   - define BLOCK as whichever ASCII character you want to use in the bar graphs
-  - define SYSTEM_MESSAGE_ID as a message id you want to send on your CAN bus
 */
 
 #define DEBUG true              //print out debug messages on serial port
@@ -18,11 +17,7 @@
 
 // CAN BUS OBJECTS //////////////////////////////////////////////
 
-
 uint8_t canBuffer[8] = {};
-
-
-
 
 #define MESSAGE_PROTOCOL  0     // CAN protocol (0: CAN 2.0A, 1: CAN 2.0B)
 #define MESSAGE_LENGTH    8     // Data length: 8 bytes
@@ -32,7 +27,6 @@ volatile unsigned long canCount = 0;
 volatile unsigned long canUnhandledCount = 0;
 
 volatile st_cmd_t canMsg;
-
 
 typedef struct {
   int16_t id;
@@ -64,8 +58,6 @@ uint8_t canBufferPlus4[8] = {};
 volatile canData canTemp;
 uint8_t canBufferTemp[8] = {};
 
-
-
 // SET UP PINS //////////////////////////////////////////////////
 
 //This version of AltSoftSerial hard-codes the pins to 9 (rx) and 5(tx)
@@ -74,6 +66,7 @@ uint8_t canBufferTemp[8] = {};
 const byte BUTTON_PIN = 10;   // pushbutton to cycle through modes
 const byte LED_ERR = 11;      // 'check engine' light
 const byte LED_SHIFT = 12;    // shift light
+const byte RESET_PIN = 13;    // reboot on CAN problems
 
 // BUILD ENGINE VARIABLES ///////////////////////////////////////
 
@@ -251,14 +244,18 @@ ISR(CANIT_vect) {
     }
   }
 }
+  
+  
 
 void setup() {
-
+  digitalWrite(RESET_PIN, LOW);
+  pinMode(RESET_PIN, OUTPUT);
   //DisplayInit();
 
   pinMode(LED_ERR, OUTPUT);
   pinMode(LED_SHIFT, OUTPUT);
   pinMode(BUTTON_PIN, INPUT_PULLUP);
+  
   
 
 //
@@ -379,6 +376,8 @@ void setup() {
 
   CANGIE |= (1 << ENIT);
 
+  //make sure watchdog timer is turned off
+  WDTCR = (0<<WDCE) | (0<<WDE) | (0 << WDP0) | (0 << WDP1);
 
   if(DEBUG) {
     Serial.println("CAN bus initialized");
@@ -401,7 +400,14 @@ void setup() {
 
   DisplayInit();
   bootAnimation();
+
+  //datasheet section 7.3 Watchdog Timer
+  //enable watchdog timer (WDCE, WDE) and set timing to ~32.5ms (WDP0, WDP1)
+  //WDTCR = (1<<WDCE) | (1<<WDE) | (1 << WDP0) | (1 << WDP1);
+
 }
+
+bool canCheckComplete = false;
 
 void loop() {
   
@@ -421,7 +427,13 @@ void loop() {
     Serial.print(",");
     Serial.print(allCanMessages[MSG_MS_PLUS3]->counter);
     Serial.print(",");
-    Serial.println(allCanMessages[MSG_MS_PLUS4]->counter);
+    Serial.print(allCanMessages[MSG_MS_PLUS4]->counter);
+    Serial.print(",         ");
+    Serial.println(canCount);
+
+    char* formattedRuntime = formatTime(millis());
+    Serial.println(formattedRuntime);
+
   }
 
 
@@ -460,6 +472,55 @@ void loop() {
          resetFunc();
        }
     }
+  }
+
+  if(!canCheckComplete && currentMillis > 2000)
+  {
+    Serial.println("CAN CHECK---------------------------------------------");
+    
+    //we are collecting 5 messages from MegaSquirt
+    //each message count should be about 20% of the total
+
+    bool mustReset = false;
+
+    int length = sizeof(allCanMessages) / sizeof(allCanMessages[0]);
+    //delay(5000);
+    //Serial.print(length);
+    //Serial.println(" allCanMessages length");
+    //delay(5000);
+
+    //long expectedMessageCount = canCount * (length/100);
+    //3, 379
+    for(int i = 0; i < length; i++)
+    {
+      if(allCanMessages[i]->counter < 20)
+      {
+        WDTCR = (1<<WDCE) | (1<<WDE) | (0 << WDP0) | (0 << WDP1);
+        delay(100);
+      }
+    }
+    
+    
+
+    if(mustReset)
+    {
+      Serial.println("MUST RESET---------------------------------------------");
+      Serial.println("-------------------------------------------------------");
+      Serial.println("-------------------------------------------------------");
+      Serial.println("-------------------------------------------------------");
+      Serial.println("-------------------------------------------------------");
+      Serial.println("-------------------------------------------------------");
+      Serial.println("-------------------------------------------------------");
+    }
+    
+    canCheckComplete = true;
+
+    digitalWrite(RESET_PIN, HIGH);
+
+
+
+    //delay(50);
+    //resetFunc();
   }
 
   //draw display
