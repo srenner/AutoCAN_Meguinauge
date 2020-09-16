@@ -66,7 +66,6 @@ uint8_t canBufferTemp[8] = {};
 const byte BUTTON_PIN = 10;   // pushbutton to cycle through modes
 const byte LED_ERR = 11;      // 'check engine' light
 const byte LED_SHIFT = 12;    // shift light
-const byte RESET_PIN = 13;    // reboot on CAN problems
 
 // BUILD ENGINE VARIABLES ///////////////////////////////////////
 
@@ -185,8 +184,6 @@ void clearBuf(volatile uint8_t* Buffer){
   }
 }
 
-//void test()
-//{
 ISR(CANIT_vect) {
   canCount++;
 
@@ -198,15 +195,12 @@ ISR(CANIT_vect) {
   mob >>= 4; // -> mob number 0..15   
   //ASSERT( (CANSTMOB & ~0xa0) ==0); // allow only RX ready and DLC warning   
     
-  canMsg.id.std = (CANIDT2>>5) | (CANIDT1 <<3);
   canTemp.id = (CANIDT2>>5) | (CANIDT1 <<3);
   
   register char length; 
   length = CANCDMOB & 0x0f;
-  //clearBuf(canTemp.data[0]);
   for (i = 0; i <length; ++i)   
   {
-    //canMsg.pt_data[i] = CANMSG;
     canTemp.data[i] = CANMSG;
   }   
   
@@ -248,17 +242,11 @@ ISR(CANIT_vect) {
   
 
 void setup() {
-  digitalWrite(RESET_PIN, LOW);
-  pinMode(RESET_PIN, OUTPUT);
   //DisplayInit();
 
   pinMode(LED_ERR, OUTPUT);
   pinMode(LED_SHIFT, OUTPUT);
   pinMode(BUTTON_PIN, INPUT_PULLUP);
-  
-  
-
-//
 
   clearBuffer(&canBufferTemp[0]);
   canTemp.data = &canBufferTemp[0];
@@ -402,7 +390,7 @@ void setup() {
   bootAnimation();
 
   //datasheet section 7.3 Watchdog Timer
-  //enable watchdog timer (WDCE, WDE) and set timing to ~32.5ms (WDP0, WDP1)
+  //enable watchdog timer (WDCE, WDE) and set timing (WDP0, WDP1)
   //WDTCR = (1<<WDCE) | (1<<WDE) | (1 << WDP0) | (1 << WDP1);
 
 }
@@ -410,14 +398,12 @@ void setup() {
 bool canCheckComplete = false;
 
 void loop() {
-  
-  //Serial.println(canCount);
+
   noInterrupts();
   processCanMessages();
   interrupts();
 
-
-  if(true)
+  if(DEBUG)
   {
     Serial.print(allCanMessages[MSG_MS_BASE]->counter);
     Serial.print(",");
@@ -435,11 +421,6 @@ void loop() {
     Serial.println(formattedRuntime);
 
   }
-
-
-
-
-
 
   previousMillis = currentMillis;
   currentMillis = millis();
@@ -476,50 +457,35 @@ void loop() {
 
   if(!canCheckComplete && currentMillis > 2000)
   {
-    Serial.println("CAN CHECK---------------------------------------------");
-    
-    //we are collecting 5 messages from MegaSquirt
-    //each message count should be about 20% of the total
-
+    if(DEBUG)
+    {
+      Serial.println("CAN CHECK---------------------------------------------");
+    }
     bool mustReset = false;
-
     int length = sizeof(allCanMessages) / sizeof(allCanMessages[0]);
-    //delay(5000);
-    //Serial.print(length);
-    //Serial.println(" allCanMessages length");
-    //delay(5000);
-
-    //long expectedMessageCount = canCount * (length/100);
-    //3, 379
     for(int i = 0; i < length; i++)
     {
       if(allCanMessages[i]->counter < 20)
       {
+        mustReset = true;
         WDTCR = (1<<WDCE) | (1<<WDE) | (0 << WDP0) | (0 << WDP1);
         delay(100);
       }
     }
-    
-    
-
     if(mustReset)
     {
-      Serial.println("MUST RESET---------------------------------------------");
-      Serial.println("-------------------------------------------------------");
-      Serial.println("-------------------------------------------------------");
-      Serial.println("-------------------------------------------------------");
-      Serial.println("-------------------------------------------------------");
-      Serial.println("-------------------------------------------------------");
-      Serial.println("-------------------------------------------------------");
+      if(DEBUG)
+      {
+        Serial.println("MUST RESET---------------------------------------------");
+        Serial.println("-------------------------------------------------------");
+        Serial.println("-------------------------------------------------------");
+        Serial.println("-------------------------------------------------------");
+        Serial.println("-------------------------------------------------------");
+        Serial.println("-------------------------------------------------------");
+        Serial.println("-------------------------------------------------------");
+      }
     }
-    
     canCheckComplete = true;
-
-    digitalWrite(RESET_PIN, HIGH);
-
-
-
-    //delay(50);
     //resetFunc();
   }
 
