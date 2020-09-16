@@ -12,6 +12,8 @@
 */
 
 #define DEBUG true              //print out debug messages on serial port
+#define DEBUG_CAN false         //print can message counts  to serial
+#define DEBUG_ENG true          //print engine variables to serial
 #define BLOCK 255               //block character to build bar graphs
 #define SPACE 32                //space character for start animation
 
@@ -35,13 +37,13 @@ typedef struct {
 } canData;
 
 #define MS_BASE_ID    1512  // set this to match the MegaSquirt setting, default is 1512
-#define MSG_MS_BASE   0     
-#define MSG_MS_PLUS1  1
-#define MSG_MS_PLUS2  2
-#define MSG_MS_PLUS3  3
-#define MSG_MS_PLUS4  4
+#define MSG_MS_BASE   0     // array index of allCanMessages[] to find the base id
+#define MSG_MS_PLUS1  1     // array index 
+#define MSG_MS_PLUS2  2     // etc...
+#define MSG_MS_PLUS3  3     // ...
+#define MSG_MS_PLUS4  4     // last element of array
 
-volatile canData* allCanMessages[5];
+volatile canData* allCanMessages[5];  //array of all CAN messages we are interested in receiving
 
 volatile canData canBase;
 volatile canData canPlus1;
@@ -84,6 +86,7 @@ struct EngineVariable
 };
 const byte ENGINE_VARIABLE_COUNT = 20;
 EngineVariable* allGauges[ENGINE_VARIABLE_COUNT];
+                            //label, current, previous, min, max, decimal, good, low, high
 EngineVariable engine_map   = {"MAP", 0.0, 0.0, 15.0, 250.0, 1, 0, 0, 0};     //manifold absolute pressure
 EngineVariable engine_rpm   = {"RPM", 0.0, 0.0, 700.0, 6000.0, 0, 0, 0, 0};   //engine rpm
 EngineVariable engine_clt   = {"CLT", 0.0, 0.0, 20.0, 240.0, 0, 0, 0, 0};     //coolant temp
@@ -214,23 +217,23 @@ ISR(CANIT_vect) {
     {
       case MS_BASE_ID:
         allCanMessages[MSG_MS_BASE]->counter++;
-        memcpy(allCanMessages[MSG_MS_BASE]->data, canTemp.data, sizeof(canTemp.data));
+        fillCanDataBuffer(MSG_MS_BASE, &canTemp);
         break;
       case MS_BASE_ID + 1:
         allCanMessages[MSG_MS_PLUS1]->counter++;
-        memcpy(allCanMessages[MSG_MS_PLUS1]->data, canTemp.data, sizeof(canTemp.data));
+        fillCanDataBuffer(MSG_MS_PLUS1, &canTemp);
         break;
       case MS_BASE_ID + 2:
         allCanMessages[MSG_MS_PLUS2]->counter++;
-        memcpy(allCanMessages[MSG_MS_PLUS2]->data, canTemp.data, sizeof(canTemp.data));
+        fillCanDataBuffer(MSG_MS_PLUS2, &canTemp);
         break;
       case MS_BASE_ID + 3:
         allCanMessages[MSG_MS_PLUS3]->counter++;
-        memcpy(allCanMessages[MSG_MS_PLUS3]->data, canTemp.data, sizeof(canTemp.data));
+        fillCanDataBuffer(MSG_MS_PLUS3, &canTemp);
         break;
       case MS_BASE_ID + 4:
         allCanMessages[MSG_MS_PLUS4]->counter++;
-        memcpy(allCanMessages[MSG_MS_PLUS4]->data, canTemp.data, sizeof(canTemp.data));
+        fillCanDataBuffer(MSG_MS_PLUS4, &canTemp);
         break;
       default:
         canUnhandledCount++;
@@ -238,8 +241,14 @@ ISR(CANIT_vect) {
     }
   }
 }
-  
-  
+
+void fillCanDataBuffer(int index, canData* canTemp)
+{
+  for(int i = 0; i < 8; i++)
+  {
+    allCanMessages[index]->data[i] = canTemp->data[i];
+  }
+}
 
 void setup() {
   //DisplayInit();
@@ -365,7 +374,7 @@ void setup() {
   CANGIE |= (1 << ENIT);
 
   //make sure watchdog timer is turned off
-  WDTCR = (0<<WDCE) | (0<<WDE) | (0 << WDP0) | (0 << WDP1);
+  //WDTCR = (0<<WDCE) | (0<<WDE) | (0 << WDP0) | (0 << WDP1);
 
   if(DEBUG) {
     Serial.println("CAN bus initialized");
@@ -405,6 +414,12 @@ void loop() {
 
   if(DEBUG)
   {
+    char* formattedRuntime = formatTime(millis());
+    Serial.println(formattedRuntime);
+  }
+
+  if(DEBUG_CAN)
+  {
     Serial.print(allCanMessages[MSG_MS_BASE]->counter);
     Serial.print(",");
     Serial.print(allCanMessages[MSG_MS_PLUS1]->counter);
@@ -416,10 +431,18 @@ void loop() {
     Serial.print(allCanMessages[MSG_MS_PLUS4]->counter);
     Serial.print(",         ");
     Serial.println(canCount);
+  }
 
-    char* formattedRuntime = formatTime(millis());
-    Serial.println(formattedRuntime);
-
+  if(DEBUG_ENG)
+  {
+    int gaugeCount = sizeof(allGauges) / sizeof(allGauges[0]);
+    for(int i = 0; i < gaugeCount; i++)
+    {
+      Serial.print(allGauges[i]->shortLabel);
+      Serial.print(": ");
+      Serial.println(allGauges[i]->currentValue);
+    }
+    Serial.println("=====");
   }
 
   previousMillis = currentMillis;
@@ -468,8 +491,8 @@ void loop() {
       if(allCanMessages[i]->counter < 20)
       {
         mustReset = true;
-        WDTCR = (1<<WDCE) | (1<<WDE) | (0 << WDP0) | (0 << WDP1);
-        delay(100);
+        //WDTCR = (1<<WDCE) | (1<<WDE) | (0 << WDP0) | (0 << WDP1);
+        //delay(100);
       }
     }
     if(mustReset)
@@ -597,17 +620,8 @@ void drawRuntime()
   writeToDisplay(formattedRuntime, 1, 9);
 }
 
-// void resetCanVariables() {
-//   for(int i = 0; i < CAN_MESSAGE_COUNT; i++) 
-//   {
-//     allCan[i]->filled = false;
-//   }
-// }
-
-
 void processCanMessages()
 {
-
   engine_map.previousValue = engine_map.currentValue;
   engine_map.currentValue = ((allCanMessages[MSG_MS_BASE]->data[0] * 256) + allCanMessages[MSG_MS_BASE]->data[1]) / 10.0;
   increment_counter(&engine_map);
@@ -629,6 +643,64 @@ void processCanMessages()
   engine_tps.previousValue = engine_tps.currentValue;
   engine_tps.currentValue = (allCanMessages[MSG_MS_BASE]->data[6] * 256 + allCanMessages[MSG_MS_BASE]->data[7]) / 10.0;
   increment_counter(&engine_tps);
+
+  if(false)
+  {
+    for(int i = 0; i < 8; i++)
+    {
+      Serial.print(canTemp.data[i]);
+      Serial.print(" ");
+    }
+    Serial.print(" ~~~ ");
+    Serial.print(canTemp.id);
+    Serial.println("::::::::::::::");
+  }
+
+  if(DEBUG_ENG && false)
+  {
+    for(int i = 0; i < 8; i++)
+    {
+      Serial.print(allCanMessages[MSG_MS_BASE]->data[i]);
+      Serial.print(" ");
+    }
+    Serial.println("");
+    Serial.println("~~~~~");
+
+    for(int i = 0; i < 8; i++)
+    {
+      Serial.print(allCanMessages[MSG_MS_PLUS1]->data[i]);
+      Serial.print(" ");
+    }
+    Serial.println("");
+    Serial.println("~~~~~");
+
+    for(int i = 0; i < 8; i++)
+    {
+      Serial.print(allCanMessages[MSG_MS_PLUS2]->data[i]);
+      Serial.print(" ");
+    }
+    Serial.println("");
+    Serial.println("~~~~~");
+
+    for(int i = 0; i < 8; i++)
+    {
+      Serial.print(allCanMessages[MSG_MS_PLUS3]->data[i]);
+      Serial.print(" ");
+    }
+    Serial.println("");
+    Serial.println("~~~~~");
+
+    for(int i = 0; i < 8; i++)
+    {
+      Serial.print(allCanMessages[MSG_MS_PLUS4]->data[i]);
+      Serial.print(" ");
+    }
+    Serial.println("");
+    Serial.println("~~~~~");
+
+  }
+
+
 
   ////////////////////        
 
