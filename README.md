@@ -70,8 +70,5 @@ Each row contains the engine parameter short code, value, and half-width bar gra
 * PW1
 
 ## MegaSquirt details
-* Tested using MegaSquirt-3 with firmware version 1.5.0.
+* Tested using MegaSquirt-3 with firmware version 1.5.1. Intermittent loss of CAN messages can sometimes be fixed by re-flashing or upgrading the MegaSquirt firmware.
 * Uses MegaSquirt's "Simplified Dash Broadcasting" as described in [this PDF](http://www.msextra.com/doc/pdf/Megasquirt_CAN_Broadcast.pdf).
-
-## Developer notes
-* This code was developed with Visual Studio Code, and is recommended for anyone who decides to use this codebase. The use of ```#pragma region``` is common with Visual Studio code, but may not be compatible with other environments. The end user is responsible for creating their own files in the .vscode folder. As this type of information can change quickly, I will not be documenting the steps to get you up and running.
