@@ -13,7 +13,7 @@
 
 #define DEBUG true              //print out debug messages on serial port
 #define DEBUG_CAN false         //print can message counts  to serial
-#define DEBUG_ENG true          //print engine variables to serial
+#define DEBUG_ENG false          //print engine variables to serial
 #define BLOCK 255               //block character to build bar graphs
 #define SPACE 32                //space character for start animation
 
@@ -83,30 +83,31 @@ struct EngineVariable
   unsigned long goodCount;
   unsigned long lowCount;
   unsigned long highCount;
+  unsigned long canCounter;
 };
 const byte ENGINE_VARIABLE_COUNT = 20;
 EngineVariable* allGauges[ENGINE_VARIABLE_COUNT];
-                            //label, current, previous, min, max, decimal, good, low, high
-EngineVariable engine_map   = {"MAP", 0.0, 0.0, 15.0, 250.0, 1, 0, 0, 0};     //manifold absolute pressure
-EngineVariable engine_rpm   = {"RPM", 0.0, 0.0, 700.0, 6000.0, 0, 0, 0, 0};   //engine rpm
-EngineVariable engine_clt   = {"CLT", 0.0, 0.0, 20.0, 240.0, 0, 0, 0, 0};     //coolant temp
-EngineVariable engine_tps   = {"TPS", 0.0, 0.0, 0.0, 100.0, 0, 0, 0, 0};      //throttle position
-EngineVariable engine_pw1   = {"PW1", 0.0, 0.0, 0.0, 20.0, 2, 0, 0, 0};       //injector pulse width bank 1
-EngineVariable engine_pw2   = {"PW2", 0.0, 0.0, 0.0, 20.0, 2, 0, 0, 0};       //injector pulse width bank 2
-EngineVariable engine_iat   = {"IAT", 0.0, 0.0, 40.0, 150.0, 0, 0, 0, 0};     //intake air temp aka 'mat'
-EngineVariable engine_adv   = {"ADV", 0.0, 0.0, 10.0, 40.0, 1, 0, 0, 0};      //ignition advance
-EngineVariable engine_tgt   = {"TGT", 0.0, 0.0, 10.0, 20.0, 1, 0, 0, 0};      //afr target
-EngineVariable engine_afr   = {"AFR", 0.0, 0.0, 10.0, 20.0, 1, 0, 0, 0};      //air fuel ratio
-EngineVariable engine_ego   = {"EGO", 0.0, 0.0, 70.0, 130.0, 0, 0, 0, 0};     //ego correction %
-EngineVariable engine_egt   = {"EGT", 0.0, 0.0, 0.0, 2000.0, 0, 0, 0, 0};     //exhaust gas temp
-EngineVariable engine_pws   = {"PWS", 0.0, 0.0, 0.0, 20.0, 2, 0, 0, 0};       //injector pulse width sequential
-EngineVariable engine_bat   = {"BAT", 0.0, 0.0, 11.0, 15.0, 1, 0, 0, 0};      //battery voltage
-EngineVariable engine_sr1   = {"SR1", 0.0, 0.0, 0.0, 999.0, 1, 0, 0, 0};      //generic sensor 1
-EngineVariable engine_sr2   = {"SR2", 0.0, 0.0, 0.0, 999.0, 1, 0, 0, 0};      //generic sensor 2
-EngineVariable engine_knk   = {"KNK", 0.0, 0.0, 0.0, 50.0, 1, 0, 0, 0};       //knock ignition retard
-EngineVariable engine_vss   = {"VSS", 0.0, 0.0, 0.0, 140.0, 0, 0, 0, 0};      //vehicle speed
-EngineVariable engine_tcr   = {"TCR", 0.0, 0.0, 0.0, 50.0, 1, 0, 0, 0};       //traction control ignition retard
-EngineVariable engine_lct   = {"LCT", 0.0, 0.0, 0.0, 50.0, 1, 0, 0, 0};       //launch control timing
+                            //label, current, previous, min, max, decimal, good, low, high, can
+EngineVariable engine_map   = {"MAP", 0.0, 0.0, 15.0, 250.0, 1, 0, 0, 0, 0};     //manifold absolute pressure
+EngineVariable engine_rpm   = {"RPM", 0.0, 0.0, 700.0, 6000.0, 0, 0, 0, 0, 0};   //engine rpm
+EngineVariable engine_clt   = {"CLT", 0.0, 0.0, 20.0, 240.0, 0, 0, 0, 0, 0};     //coolant temp
+EngineVariable engine_tps   = {"TPS", 0.0, 0.0, 0.0, 100.0, 0, 0, 0, 0, 0};      //throttle position
+EngineVariable engine_pw1   = {"PW1", 0.0, 0.0, 0.0, 20.0, 2, 0, 0, 0, 0};       //injector pulse width bank 1
+EngineVariable engine_pw2   = {"PW2", 0.0, 0.0, 0.0, 20.0, 2, 0, 0, 0, 0};       //injector pulse width bank 2
+EngineVariable engine_iat   = {"IAT", 0.0, 0.0, 40.0, 150.0, 0, 0, 0, 0, 0};     //intake air temp aka 'mat'
+EngineVariable engine_adv   = {"ADV", 0.0, 0.0, 10.0, 40.0, 1, 0, 0, 0, 0};      //ignition advance
+EngineVariable engine_tgt   = {"TGT", 0.0, 0.0, 10.0, 20.0, 1, 0, 0, 0, 0};      //afr target
+EngineVariable engine_afr   = {"AFR", 0.0, 0.0, 10.0, 20.0, 1, 0, 0, 0, 0};      //air fuel ratio
+EngineVariable engine_ego   = {"EGO", 0.0, 0.0, 70.0, 130.0, 0, 0, 0, 0, 0};     //ego correction %
+EngineVariable engine_egt   = {"EGT", 0.0, 0.0, 0.0, 2000.0, 0, 0, 0, 0, 0};     //exhaust gas temp
+EngineVariable engine_pws   = {"PWS", 0.0, 0.0, 0.0, 20.0, 2, 0, 0, 0, 0};       //injector pulse width sequential
+EngineVariable engine_bat   = {"BAT", 0.0, 0.0, 11.0, 15.0, 1, 0, 0, 0, 0};      //battery voltage
+EngineVariable engine_sr1   = {"SR1", 0.0, 0.0, 0.0, 999.0, 1, 0, 0, 0, 0};      //generic sensor 1
+EngineVariable engine_sr2   = {"SR2", 0.0, 0.0, 0.0, 999.0, 1, 0, 0, 0, 0};      //generic sensor 2
+EngineVariable engine_knk   = {"KNK", 0.0, 0.0, 0.0, 50.0, 1, 0, 0, 0, 0};       //knock ignition retard
+EngineVariable engine_vss   = {"VSS", 0.0, 0.0, 0.0, 140.0, 0, 0, 0, 0, 0};      //vehicle speed
+EngineVariable engine_tcr   = {"TCR", 0.0, 0.0, 0.0, 50.0, 1, 0, 0, 0, 0};       //traction control ignition retard
+EngineVariable engine_lct   = {"LCT", 0.0, 0.0, 0.0, 50.0, 1, 0, 0, 0, 0};       //launch control timing
 #pragma endregion
 
 bool shiftLight = false;
@@ -522,13 +523,14 @@ void loop() {
   }
 
   //check for errors
-  if(false) {
+  if(true) {
     if(currentMillis - lastDiagnosticMillis >= diagnosticInterval && currentMillis > 500) {
       lastDiagnosticMillis = currentMillis;
       bool err = calculateErrorLight();
       if(err != inError) {
         inError = err;
-        digitalWrite(LED_ERR, err);  
+        digitalWrite(LED_ERR, err);
+        Serial.println("ERROR============================================================================");
       }
     }
   }
@@ -622,27 +624,186 @@ void drawRuntime()
 
 void processCanMessages()
 {
-  engine_map.previousValue = engine_map.currentValue;
-  engine_map.currentValue = ((allCanMessages[MSG_MS_BASE]->data[0] * 256) + allCanMessages[MSG_MS_BASE]->data[1]) / 10.0;
-  increment_counter(&engine_map);
-
-  engine_rpm.previousValue = engine_rpm.currentValue;
-  //engine_rpm.currentValue = buf[2] * 256 + buf[3];
-  //round rpm to nearest 10
-  engine_rpm.currentValue = round((allCanMessages[MSG_MS_BASE]->data[2] * 256 + allCanMessages[MSG_MS_BASE]->data[3]) / 10.0) * 10.0;
-  increment_counter(&engine_rpm);
-  
-  engine_clt.previousValue = engine_clt.currentValue;
-  engine_clt.currentValue = (allCanMessages[MSG_MS_BASE]->data[4] * 256 + allCanMessages[MSG_MS_BASE]->data[5]) / 10.0;
-  if(startupCLT == STARTUP_CLT_VALUE)
+  if(engine_map.canCounter < allCanMessages[MSG_MS_BASE]->counter)
   {
-    startupCLT = engine_clt.currentValue;
+    engine_map.previousValue = engine_map.currentValue;
+    engine_map.currentValue = ((allCanMessages[MSG_MS_BASE]->data[0] * 256) + allCanMessages[MSG_MS_BASE]->data[1]) / 10.0;
+    engine_map.canCounter = allCanMessages[MSG_MS_BASE]->counter;
+    incrementQualityCounters(&engine_map);
   }
-  increment_counter(&engine_clt);
+
+  if(engine_rpm.canCounter < allCanMessages[MSG_MS_BASE]->counter)
+  {
+    engine_rpm.previousValue = engine_rpm.currentValue;
+    //engine_rpm.currentValue = buf[2] * 256 + buf[3];
+    //round rpm to nearest 10
+    engine_rpm.currentValue = round((allCanMessages[MSG_MS_BASE]->data[2] * 256 + allCanMessages[MSG_MS_BASE]->data[3]) / 10.0) * 10.0;
+    engine_rpm.canCounter = allCanMessages[MSG_MS_BASE]->counter;
+    incrementQualityCounters(&engine_rpm);
+  }
+
   
-  engine_tps.previousValue = engine_tps.currentValue;
-  engine_tps.currentValue = (allCanMessages[MSG_MS_BASE]->data[6] * 256 + allCanMessages[MSG_MS_BASE]->data[7]) / 10.0;
-  increment_counter(&engine_tps);
+  if(engine_clt.canCounter < allCanMessages[MSG_MS_BASE]->counter)
+  {
+    engine_clt.previousValue = engine_clt.currentValue;
+    engine_clt.currentValue = (allCanMessages[MSG_MS_BASE]->data[4] * 256 + allCanMessages[MSG_MS_BASE]->data[5]) / 10.0;
+    if(startupCLT == STARTUP_CLT_VALUE)
+    {
+      startupCLT = engine_clt.currentValue;
+    }
+    engine_clt.canCounter = allCanMessages[MSG_MS_BASE]->counter;
+    incrementQualityCounters(&engine_clt);
+  }
+
+  if(engine_tps.canCounter < allCanMessages[MSG_MS_BASE]->counter)
+  {
+    engine_tps.previousValue = engine_tps.currentValue;
+    engine_tps.currentValue = (allCanMessages[MSG_MS_BASE]->data[6] * 256 + allCanMessages[MSG_MS_BASE]->data[7]) / 10.0;
+    engine_tps.canCounter = allCanMessages[MSG_MS_BASE]->counter;
+    incrementQualityCounters(&engine_tps);
+  }
+
+  ////////////////////        
+
+  if(engine_pw1.canCounter < allCanMessages[MSG_MS_PLUS1]->counter)
+  {
+    engine_pw1.previousValue = engine_pw1.currentValue;
+    engine_pw1.currentValue = (allCanMessages[MSG_MS_PLUS1]->data[0] * 256 + allCanMessages[MSG_MS_PLUS1]->data[1]) / 1000.0;
+    engine_pw1.canCounter = allCanMessages[MSG_MS_PLUS1]->counter;
+    incrementQualityCounters(&engine_pw1);
+  }
+
+  if(engine_pw2.canCounter < allCanMessages[MSG_MS_PLUS1]->counter)
+  {
+    engine_pw2.previousValue = engine_pw2.currentValue;
+    engine_pw2.currentValue = (allCanMessages[MSG_MS_PLUS1]->data[2] * 256 + allCanMessages[MSG_MS_PLUS1]->data[3]) / 1000.0;
+    engine_pw2.canCounter = allCanMessages[MSG_MS_PLUS1]->counter;
+    incrementQualityCounters(&engine_pw2);
+  }
+
+  if(engine_iat.canCounter < allCanMessages[MSG_MS_PLUS1]->counter)
+  {
+    engine_iat.previousValue = engine_iat.currentValue;
+    engine_iat.currentValue = (allCanMessages[MSG_MS_PLUS1]->data[4] * 256 + allCanMessages[MSG_MS_PLUS1]->data[5]) / 10.0;
+    engine_iat.canCounter = allCanMessages[MSG_MS_PLUS1]->counter;
+    incrementQualityCounters(&engine_iat);
+  }
+
+  if(engine_adv.canCounter < allCanMessages[MSG_MS_PLUS1]->counter)
+  {
+    engine_adv.previousValue = engine_adv.currentValue;
+    engine_adv.currentValue = (allCanMessages[MSG_MS_PLUS1]->data[6] * 256 + allCanMessages[MSG_MS_PLUS1]->data[7]) / 10.0;
+    engine_adv.canCounter = allCanMessages[MSG_MS_PLUS1]->counter;
+    incrementQualityCounters(&engine_adv);
+  }
+
+  ////////////////////
+
+  if(engine_tgt.canCounter < allCanMessages[MSG_MS_PLUS2]->counter)
+  {
+    engine_tgt.previousValue = engine_tgt.currentValue;
+    engine_tgt.currentValue = (double)allCanMessages[MSG_MS_PLUS2]->data[0] / 10.0;
+    engine_tgt.canCounter = allCanMessages[MSG_MS_PLUS2]->counter;
+    incrementQualityCounters(&engine_tgt);
+  }     
+
+  if(engine_afr.canCounter < allCanMessages[MSG_MS_PLUS2]->counter)
+  {
+    engine_afr.previousValue = engine_afr.currentValue;
+    engine_afr.currentValue = (double)allCanMessages[MSG_MS_PLUS2]->data[1] / 10.0;
+    engine_afr.canCounter = allCanMessages[MSG_MS_PLUS2]->counter;
+    incrementQualityCounters(&engine_afr);
+  }
+
+  if(engine_ego.canCounter < allCanMessages[MSG_MS_PLUS2]->counter)
+  {
+    engine_ego.previousValue = engine_ego.currentValue;
+    engine_ego.currentValue = (allCanMessages[MSG_MS_PLUS2]->data[2] * 256 + allCanMessages[MSG_MS_PLUS2]->data[3]) / 10.0;
+    engine_ego.canCounter = allCanMessages[MSG_MS_PLUS2]->counter;
+    incrementQualityCounters(&engine_ego);
+  }
+
+  if(engine_egt.canCounter < allCanMessages[MSG_MS_PLUS2]->counter)
+  {
+    engine_egt.previousValue = engine_egt.currentValue;
+    engine_egt.currentValue = (allCanMessages[MSG_MS_PLUS2]->data[4] * 256 + allCanMessages[MSG_MS_PLUS2]->data[5]) / 10.0;
+    engine_egt.canCounter = allCanMessages[MSG_MS_PLUS2]->counter;
+    incrementQualityCounters(&engine_egt);
+  }
+
+  if(engine_pws.canCounter < allCanMessages[MSG_MS_PLUS2]->counter)
+  {
+    engine_pws.previousValue = engine_pws.currentValue;
+    engine_pws.currentValue = (allCanMessages[MSG_MS_PLUS2]->data[6] * 256 + allCanMessages[MSG_MS_PLUS2]->data[7]) / 1000.0;
+    engine_pws.canCounter = allCanMessages[MSG_MS_PLUS2]->counter;
+    incrementQualityCounters(&engine_pws);
+  }
+
+  ////////////////////
+
+  if(engine_bat.canCounter < allCanMessages[MSG_MS_PLUS2]->counter)
+  {
+    engine_bat.previousValue = engine_bat.currentValue;
+    engine_bat.currentValue = (allCanMessages[MSG_MS_PLUS3]->data[0] * 256 + allCanMessages[MSG_MS_PLUS3]->data[1]) / 10.0;
+    engine_bat.canCounter = allCanMessages[MSG_MS_PLUS2]->counter;
+    incrementQualityCounters(&engine_bat);
+  }
+
+  if(engine_sr1.canCounter < allCanMessages[MSG_MS_PLUS3]->counter)
+  {
+    //not tested
+    engine_sr1.previousValue = engine_sr1.currentValue;
+    engine_sr1.currentValue = (allCanMessages[MSG_MS_PLUS3]->data[2] * 256 + allCanMessages[MSG_MS_PLUS3]->data[3]) / 10.0;
+    engine_sr1.canCounter = allCanMessages[MSG_MS_PLUS3]->counter;
+    incrementQualityCounters(&engine_sr1);
+  }
+
+
+  if(engine_sr2.canCounter < allCanMessages[MSG_MS_PLUS3]->counter)
+  {
+    //not tested
+    engine_sr2.previousValue = engine_sr2.currentValue;
+    engine_sr2.currentValue = (allCanMessages[MSG_MS_PLUS3]->data[4] * 256 + allCanMessages[MSG_MS_PLUS3]->data[5]) / 10.0;
+    engine_sr2.canCounter = allCanMessages[MSG_MS_PLUS3]->counter;
+    incrementQualityCounters(&engine_sr2);
+  }
+
+  if(engine_knk.canCounter < allCanMessages[MSG_MS_PLUS3]->counter)
+  {
+    //not tested
+    engine_knk.previousValue = engine_knk.currentValue;
+    engine_knk.currentValue = (allCanMessages[MSG_MS_PLUS3]->data[6] * 256) / 10.0;
+    engine_knk.canCounter = allCanMessages[MSG_MS_PLUS3]->counter;
+    incrementQualityCounters(&engine_knk);
+  }
+
+  ////////////////////
+
+  if(engine_vss.canCounter < allCanMessages[MSG_MS_PLUS4]->counter)
+  {
+    //not tested
+    engine_vss.previousValue = engine_vss.currentValue;
+    engine_vss.currentValue = (allCanMessages[MSG_MS_PLUS4]->data[0] * 256 + allCanMessages[MSG_MS_PLUS4]->data[1]) / 10.0;
+    engine_vss.canCounter = allCanMessages[MSG_MS_PLUS4]->counter;
+    incrementQualityCounters(&engine_vss);
+  }
+
+  if(engine_tcr.canCounter < allCanMessages[MSG_MS_PLUS4]->counter)
+  {
+    //not tested
+    engine_tcr.previousValue = engine_tcr.currentValue;
+    engine_tcr.currentValue = (allCanMessages[MSG_MS_PLUS4]->data[2] * 256 + allCanMessages[MSG_MS_PLUS4]->data[3]) / 10.0;
+    engine_tcr.canCounter = allCanMessages[MSG_MS_PLUS4]->counter;
+    incrementQualityCounters(&engine_tcr);
+  }
+
+  if(engine_lct.canCounter < allCanMessages[MSG_MS_PLUS4]->counter)
+  {
+    engine_lct.previousValue = engine_lct.currentValue;
+    engine_lct.previousValue = (allCanMessages[MSG_MS_PLUS4]->data[4] * 256 + allCanMessages[MSG_MS_PLUS4]->data[5]) / 10.0;
+    engine_lct.canCounter = allCanMessages[MSG_MS_PLUS4]->counter;
+    incrementQualityCounters(&engine_lct);
+  }
 
   if(false)
   {
@@ -699,85 +860,6 @@ void processCanMessages()
     Serial.println("~~~~~");
 
   }
-
-
-
-  ////////////////////        
-
-  engine_pw1.previousValue = engine_pw1.currentValue;
-  engine_pw1.currentValue = (allCanMessages[MSG_MS_PLUS1]->data[0] * 256 + allCanMessages[MSG_MS_PLUS1]->data[1]) / 1000.0;
-  increment_counter(&engine_pw1);
-
-  engine_pw2.previousValue = engine_pw2.currentValue;
-  engine_pw2.currentValue = (allCanMessages[MSG_MS_PLUS1]->data[2] * 256 + allCanMessages[MSG_MS_PLUS1]->data[3]) / 1000.0;
-  increment_counter(&engine_pw2);
-
-  engine_iat.previousValue = engine_iat.currentValue;
-  engine_iat.currentValue = (allCanMessages[MSG_MS_PLUS1]->data[4] * 256 + allCanMessages[MSG_MS_PLUS1]->data[5]) / 10.0;
-  increment_counter(&engine_iat);
-
-  engine_adv.previousValue = engine_adv.currentValue;
-  engine_adv.currentValue = (allCanMessages[MSG_MS_PLUS1]->data[6] * 256 + allCanMessages[MSG_MS_PLUS1]->data[7]) / 10.0;
-  increment_counter(&engine_adv);
-
-  ////////////////////
-        
-  engine_tgt.previousValue = engine_tgt.currentValue;
-  engine_tgt.currentValue = (double)allCanMessages[MSG_MS_PLUS2]->data[0] / 10.0;
-  increment_counter(&engine_tgt);
-
-  engine_afr.previousValue = engine_afr.currentValue;
-  engine_afr.currentValue = (double)allCanMessages[MSG_MS_PLUS2]->data[1] / 10.0;
-  increment_counter(&engine_afr);
-
-  engine_ego.previousValue = engine_ego.currentValue;
-  engine_ego.currentValue = (allCanMessages[MSG_MS_PLUS2]->data[2] * 256 + allCanMessages[MSG_MS_PLUS2]->data[3]) / 10.0;
-  increment_counter(&engine_ego);
-
-  engine_egt.previousValue = engine_egt.currentValue;
-  engine_egt.currentValue = (allCanMessages[MSG_MS_PLUS2]->data[4] * 256 + allCanMessages[MSG_MS_PLUS2]->data[5]) / 10.0;
-  increment_counter(&engine_egt);
-
-  engine_pws.previousValue = engine_pws.currentValue;
-  engine_pws.currentValue = (allCanMessages[MSG_MS_PLUS2]->data[6] * 256 + allCanMessages[MSG_MS_PLUS2]->data[7]) / 1000.0;
-  increment_counter(&engine_pws);
-        
-  ////////////////////
-
-  engine_bat.previousValue = engine_bat.currentValue;
-  engine_bat.currentValue = (allCanMessages[MSG_MS_PLUS3]->data[0] * 256 + allCanMessages[MSG_MS_PLUS3]->data[1]) / 10.0;
-  increment_counter(&engine_bat);
-
-  //not tested
-  engine_sr1.previousValue = engine_sr1.currentValue;
-  engine_sr1.currentValue = (allCanMessages[MSG_MS_PLUS3]->data[2] * 256 + allCanMessages[MSG_MS_PLUS3]->data[3]) / 10.0;
-  increment_counter(&engine_sr1);
-
-  //not tested
-  engine_sr2.previousValue = engine_sr2.currentValue;
-  engine_sr2.currentValue = (allCanMessages[MSG_MS_PLUS3]->data[4] * 256 + allCanMessages[MSG_MS_PLUS3]->data[5]) / 10.0;
-  increment_counter(&engine_sr2);
-
-  //not tested
-  engine_knk.previousValue = engine_knk.currentValue;
-  engine_knk.currentValue = (allCanMessages[MSG_MS_PLUS3]->data[6] * 256) / 10.0;
-  increment_counter(&engine_knk);
-
-  ////////////////////
-
-  //not tested
-  engine_vss.previousValue = engine_vss.currentValue;
-  engine_vss.currentValue = (allCanMessages[MSG_MS_PLUS4]->data[0] * 256 + allCanMessages[MSG_MS_PLUS4]->data[1]) / 10.0;
-  increment_counter(&engine_vss);
-
-  //not tested
-  engine_tcr.previousValue = engine_tcr.currentValue;
-  engine_tcr.currentValue = (allCanMessages[MSG_MS_PLUS4]->data[2] * 256 + allCanMessages[MSG_MS_PLUS4]->data[3]) / 10.0;
-  increment_counter(&engine_tcr);
-
-  engine_lct.previousValue = engine_lct.currentValue;
-  engine_lct.previousValue = (allCanMessages[MSG_MS_PLUS4]->data[4] * 256 + allCanMessages[MSG_MS_PLUS4]->data[5]) / 10.0;
-  increment_counter(&engine_lct);
         
 }
 
@@ -795,7 +877,7 @@ void serialPrintCanData(volatile canData *canMsg)
   Serial.print("\r\n");
 }
 
-void increment_counter(EngineVariable* engine) {
+void incrementQualityCounters(EngineVariable* engine) {
   if(engine->currentValue > engine->maximum) {
     engine->highCount++;
   }
@@ -804,7 +886,7 @@ void increment_counter(EngineVariable* engine) {
   }
   else {
     engine->goodCount++;
-  }  
+  }
 }
 
 void drawBar(EngineVariable* engineVar, int row, int column, int maxLength) {
