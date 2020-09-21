@@ -13,7 +13,7 @@
 
 #define DEBUG true              //print out debug messages on serial port
 #define DEBUG_CAN false         //print can message counts  to serial
-#define DEBUG_ENG false          //print engine variables to serial
+#define DEBUG_ENG true          //print engine variables to serial
 #define BLOCK 255               //block character to build bar graphs
 #define SPACE 32                //space character for start animation
 
