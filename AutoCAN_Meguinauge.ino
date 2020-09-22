@@ -72,42 +72,7 @@ const byte LED_SHIFT = 12;    // shift light
 // BUILD ENGINE VARIABLES ///////////////////////////////////////
 
 #pragma region engine variables
-struct EngineVariable
-{
-  char* shortLabel;
-  float currentValue;
-  float previousValue;
-  float minimum;
-  float maximum;
-  byte decimalPlaces;
-  unsigned long goodCount;
-  unsigned long lowCount;
-  unsigned long highCount;
-  unsigned long canCounter;
-};
-const byte ENGINE_VARIABLE_COUNT = 20;
-EngineVariable* allGauges[ENGINE_VARIABLE_COUNT];
-                            //label, current, previous, min, max, decimal, good, low, high, can
-EngineVariable engine_map   = {"MAP", 0.0, 0.0, 15.0, 250.0, 1, 0, 0, 0, 0};     //manifold absolute pressure
-EngineVariable engine_rpm   = {"RPM", 0.0, 0.0, 700.0, 6000.0, 0, 0, 0, 0, 0};   //engine rpm
-EngineVariable engine_clt   = {"CLT", 0.0, 0.0, 20.0, 240.0, 0, 0, 0, 0, 0};     //coolant temp
-EngineVariable engine_tps   = {"TPS", 0.0, 0.0, 0.0, 100.0, 0, 0, 0, 0, 0};      //throttle position
-EngineVariable engine_pw1   = {"PW1", 0.0, 0.0, 0.0, 20.0, 2, 0, 0, 0, 0};       //injector pulse width bank 1
-EngineVariable engine_pw2   = {"PW2", 0.0, 0.0, 0.0, 20.0, 2, 0, 0, 0, 0};       //injector pulse width bank 2
-EngineVariable engine_iat   = {"IAT", 0.0, 0.0, 40.0, 150.0, 0, 0, 0, 0, 0};     //intake air temp aka 'mat'
-EngineVariable engine_adv   = {"ADV", 0.0, 0.0, 10.0, 40.0, 1, 0, 0, 0, 0};      //ignition advance
-EngineVariable engine_tgt   = {"TGT", 0.0, 0.0, 10.0, 20.0, 1, 0, 0, 0, 0};      //afr target
-EngineVariable engine_afr   = {"AFR", 0.0, 0.0, 10.0, 20.0, 1, 0, 0, 0, 0};      //air fuel ratio
-EngineVariable engine_ego   = {"EGO", 0.0, 0.0, 70.0, 130.0, 0, 0, 0, 0, 0};     //ego correction %
-EngineVariable engine_egt   = {"EGT", 0.0, 0.0, 0.0, 2000.0, 0, 0, 0, 0, 0};     //exhaust gas temp
-EngineVariable engine_pws   = {"PWS", 0.0, 0.0, 0.0, 20.0, 2, 0, 0, 0, 0};       //injector pulse width sequential
-EngineVariable engine_bat   = {"BAT", 0.0, 0.0, 11.0, 15.0, 1, 0, 0, 0, 0};      //battery voltage
-EngineVariable engine_sr1   = {"SR1", 0.0, 0.0, 0.0, 999.0, 1, 0, 0, 0, 0};      //generic sensor 1
-EngineVariable engine_sr2   = {"SR2", 0.0, 0.0, 0.0, 999.0, 1, 0, 0, 0, 0};      //generic sensor 2
-EngineVariable engine_knk   = {"KNK", 0.0, 0.0, 0.0, 50.0, 1, 0, 0, 0, 0};       //knock ignition retard
-EngineVariable engine_vss   = {"VSS", 0.0, 0.0, 0.0, 140.0, 0, 0, 0, 0, 0};      //vehicle speed
-EngineVariable engine_tcr   = {"TCR", 0.0, 0.0, 0.0, 50.0, 1, 0, 0, 0, 0};       //traction control ignition retard
-EngineVariable engine_lct   = {"LCT", 0.0, 0.0, 0.0, 50.0, 1, 0, 0, 0, 0};       //launch control timing
+//moved to library AutoCAN.h
 #pragma endregion
 
 bool shiftLight = false;
