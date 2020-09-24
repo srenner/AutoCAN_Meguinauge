@@ -11,9 +11,9 @@
   - define BLOCK as whichever ASCII character you want to use in the bar graphs
 */
 
-#define DEBUG true              //print out debug messages on serial port
+#define DEBUG false              //print out debug messages on serial port
 #define DEBUG_CAN false         //print can message counts  to serial
-#define DEBUG_ENG true          //print engine variables to serial
+#define DEBUG_ENG false          //print engine variables to serial
 #define BLOCK 255               //block character to build bar graphs
 #define SPACE 32                //space character for start animation
 
@@ -27,6 +27,7 @@ uint8_t canBuffer[8] = {};
 
 volatile unsigned long canCount = 0;
 volatile unsigned long canUnhandledCount = 0;
+volatile float mph = 0.0;
 
 volatile st_cmd_t canMsg;
 
@@ -201,8 +202,16 @@ ISR(CANIT_vect) {
         allCanMessages[MSG_MS_PLUS4]->counter++;
         fillCanDataBuffer(MSG_MS_PLUS4, &canTemp);
         break;
-      default:
+      case CAN_SH_VSS_MSG_ID:
         canUnhandledCount++;
+
+        mph = canTemp.data[0] * 256 + canTemp.data[1] / 10.0; 
+        //(allCanMessages[MSG_MS_PLUS4]->data[0] * 256 + allCanMessages[MSG_MS_PLUS4]->data[1]) / 10.0;
+        //(double)allCanMessages[MSG_MS_PLUS2]->data[1] / 10.0
+
+        break;
+      default:
+        //canUnhandledCount++;
         break;
     }
   }
@@ -376,7 +385,10 @@ void loop() {
 
   noInterrupts();
   processCanMessages();
+  //Serial.println(canUnhandledCount);
+  Serial.println(mph);
   interrupts();
+
 
   if(DEBUG)
   {
