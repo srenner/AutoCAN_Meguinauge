@@ -204,11 +204,7 @@ ISR(CANIT_vect) {
         break;
       case CAN_SH_VSS_MSG_ID:
         canUnhandledCount++;
-
-        mph = canTemp.data[0] * 256 + canTemp.data[1] / 10.0; 
-        //(allCanMessages[MSG_MS_PLUS4]->data[0] * 256 + allCanMessages[MSG_MS_PLUS4]->data[1]) / 10.0;
-        //(double)allCanMessages[MSG_MS_PLUS2]->data[1] / 10.0
-
+        mph = ((canTemp.data[0] * 256) + canTemp.data[1]) / 10.0; 
         break;
       default:
         //canUnhandledCount++;
