@@ -1,8 +1,9 @@
 #include <Arduino.h>
-#include "Can485DisplayHelper.h"
 #include <ASTCanLib.h>
 #include <math.h>
 #include <AutoCAN.h>
+#include <LiquidCrystal.h>
+#include "Can485DisplayHelper.h"
 
 /*
   CONFIGURATION NOTES
@@ -66,9 +67,105 @@ uint8_t canBufferTemp[8] = {};
 //This version of AltSoftSerial hard-codes the pins to 9 (rx) and 5(tx)
 //This also disables PWM on 6 and 7
 
-const byte BUTTON_PIN = 10;   // pushbutton to cycle through modes
-const byte LED_ERR = 11;      // 'check engine' light
-const byte LED_SHIFT = 12;    // shift light
+const byte LED_ERR = 7;      // 'check engine' light
+const byte LED_SHIFT = 8;    // shift light
+const byte BUTTON_PIN = 9;   // pushbutton to cycle through modes
+
+const uint8_t RS_PIN = 14;
+const uint8_t EN_PIN = 15;
+const uint8_t DB7_PIN = 13;
+const uint8_t DB6_PIN = 12;
+const uint8_t DB5_PIN = 10;
+const uint8_t DB4_PIN = 11;
+
+LiquidCrystal lcd(RS_PIN, EN_PIN, DB4_PIN, DB5_PIN, DB6_PIN, DB7_PIN);
+
+// CUSTOM LCD CHARACTERS ////////////////////////////////////////
+
+// CREATE CUSTOM LCD CHARACTERS //////////////////////////
+
+byte fill1[8] = {
+  0x10,
+  0x10,
+  0x10,
+  0x10,
+  0x10,
+  0x10,
+  0x10,
+  0x10
+};
+byte fill2[8] = {
+  0x18,
+  0x18,
+  0x18,
+  0x18,
+  0x18,
+  0x18,
+  0x18,
+  0x18
+};
+byte fill3[8] = {
+  0x1C,
+  0x1C,
+  0x1C,
+  0x1C,
+  0x1C,
+  0x1C,
+  0x1C,
+  0x1C
+};
+byte fill4[8] = {
+  0x1E,
+  0x1E,
+  0x1E,
+  0x1E,
+  0x1E,
+  0x1E,
+  0x1E,
+  0x1E
+};
+byte fill5[8] = {
+  0x1F,
+  0x1F,
+  0x1F,
+  0x1F,
+  0x1F,
+  0x1F,
+  0x1F,
+  0x1F
+};
+
+byte fillMiddle[8] = {
+  0x04,
+  0x04,
+  0x04,
+  0x04,
+  0x04,
+  0x04,
+  0x04,
+  0x04  
+};
+
+byte fillNothing[8] = {
+  0x00,
+  0x00,
+  0x00,
+  0x00,
+  0x00,
+  0x00,
+  0x00,
+  0x00
+};
+
+enum customCharacters {
+  charBlock1         = 0,
+  charBlock2         = 1,
+  charBlock3         = 2,
+  charBlock4         = 3,
+  charBlock5         = 4,
+  charMiddle         = 5,
+  charBlank          = 6
+};
 
 // BUILD ENGINE VARIABLES ///////////////////////////////////////
 
@@ -222,8 +319,16 @@ void fillCanDataBuffer(int index, canData* canTemp)
 }
 
 void setup() {
-  DisplayInit();
-  bootAnimation();
+  lcd.begin(16, 2);
+  //  lcd.print("hello world");
+
+  lcd.createChar(charBlock1, fill1);
+  lcd.createChar(charBlock2, fill2);
+  lcd.createChar(charBlock3, fill3);
+  lcd.createChar(charBlock4, fill4);
+  lcd.createChar(charBlock5, fill5);
+  lcd.createChar(charMiddle, fillMiddle);
+  lcd.createChar(charBlank, fillNothing);
 
   pinMode(LED_ERR, OUTPUT);
   pinMode(LED_SHIFT, OUTPUT);
@@ -307,7 +412,7 @@ void setup() {
 
   #pragma endregion
 
-  writeToDisplay("Wait for CAN bus");
+  lcd.print("Wait for ECU");
   canInit(500000);                        // Initialise CAN port - must be before Serial.begin
   Serial.begin(1000000);
 
@@ -366,8 +471,7 @@ void setup() {
 
   while(can_cmd(&canMsg) != CAN_CMD_ACCEPTED);
 
-
-
+  lcd.clear();
 
   //datasheet section 7.3 Watchdog Timer
   //enable watchdog timer (WDCE, WDE) and set timing (WDP0, WDP1)
@@ -381,10 +485,7 @@ void loop() {
 
   noInterrupts();
   processCanMessages();
-  //Serial.println(canUnhandledCount);
-  Serial.println(mph);
   interrupts();
-
 
   if(DEBUG)
   {
@@ -529,7 +630,8 @@ void nextDisplay()
   {
     Serial.println("next display");
   }
-  clearDisplay();
+  //clearDisplay();
+  lcd.clear();
   currentDisplayIndex++;
   if(currentDisplayIndex >= (DISPLAY_COUNT - 1))
   {
@@ -579,20 +681,32 @@ void drawWarmup()
   }
   else
   {
-    writeToDisplay("Warmup", 1, 1);
-    writeToDisplay(engine_clt.currentValue, engine_clt.decimalPlaces, 1, 7);
-    //drawBar(float lowValue, float highValue, float currentValue, int row, int column, int maxLength)
-    drawBar(startupCLT, 160.0, engine_clt.currentValue, 2, 1, 16);
+    lcd.setCursor(0, 0);
+    lcd.print("Warmup");
+    //writeToDisplay("Warmup", 1, 1);
+    lcd.setCursor(6, 0);
+
+    static char outstr[15];
+    dtostrf(engine_clt.currentValue,4, engine_clt.decimalPlaces, outstr);
+    lcd.print(outstr);
+
+    //writeToDisplay(engine_clt.currentValue, engine_clt.decimalPlaces, 1, 7);
+    ////drawBar(float lowValue, float highValue, float currentValue, int row, int column, int maxLength)
+    drawBar(startupCLT, 160.0, engine_clt.currentValue, 1, 0, 16);
   }
 }
 
 void drawRuntime()
 {
-  writeToDisplay("Runtime", 1, 1);
+  lcd.setCursor(0,0);
+  lcd.print("Runtime");
+  //writeToDisplay("Runtime", 1, 1);
 
   char* formattedRuntime = formatTime(millis());
   //Serial.println(formattedRuntime);
-  writeToDisplay(formattedRuntime, 1, 9);
+  //writeToDisplay(formattedRuntime, 1, 9);
+  lcd.setCursor(8,0);
+  lcd.print(formattedRuntime);
 }
 
 void processCanMessages()
@@ -863,15 +977,19 @@ void incrementQualityCounters(EngineVariable* engine) {
 }
 
 void drawBar(EngineVariable* engineVar, int row, int column, int maxLength) {
-  
+  lcd.setCursor(column-1, row-1);
   int length = map(engineVar->currentValue, engineVar->minimum, engineVar->maximum, 0, maxLength);
 
   for(int i = 0; i < maxLength; i++) {
     if(i > length) {
-      writeSpecialToDisplay(SPACE, row, column+i);
+      lcd.setCursor(column-1+i, row-1);
+      lcd.write((byte)charBlank);
+      //writeSpecialToDisplay(SPACE, row, column+i);
     }
     else {
-      writeSpecialToDisplay(BLOCK, row, column+i);
+      lcd.setCursor(column-1+i, row-1);
+      lcd.write((byte)charBlock5);
+      //writeSpecialToDisplay(BLOCK, row, column+i);
     }
   }
 }
@@ -881,10 +999,12 @@ void drawBar(float lowValue, float highValue, float currentValue, int row, int c
   int length = map(currentValue, lowValue, highValue, 0, maxLength);
   for(int i = 0; i < maxLength; i++) {
     if(i > length) {
-      writeSpecialToDisplay(SPACE, row, column+i);
+      lcd.setCursor(column+i, row);
+      lcd.write(charBlank);
     }
     else {
-      writeSpecialToDisplay(BLOCK, row, column+i);
+      lcd.setCursor(column+i, row);
+      lcd.write(charBlock5);
     }
   }
 }
@@ -950,8 +1070,14 @@ void drawSingleGauge(EngineVariable* gauge)
   char* gaugeLabel = gauge->shortLabel;
   float gaugeValue = gauge->currentValue;
   int gaugeDecimal = gauge->decimalPlaces;
-  writeToDisplay(gaugeLabel, 1, 1);
-  writeToDisplay(gaugeValue, gaugeDecimal, 1, 5);
+  //writeToDisplay(gaugeLabel, 1, 1);
+  lcd.setCursor(0,0);
+  lcd.print(gaugeLabel);
+  //writeToDisplay(gaugeValue, gaugeDecimal, 1, 5);
+  lcd.setCursor(4,0);
+  static char outstr[15];
+  dtostrf(gaugeValue,4, gaugeDecimal, outstr);
+  lcd.print(outstr);
   drawBar(gauge, 2, 1, 16);
 }
 
@@ -960,22 +1086,40 @@ void drawDualGauge(EngineVariable* gauge1, EngineVariable* gauge2)
   char* gauge1Label = gauge1->shortLabel;
   float gauge1Value = gauge1->currentValue;
   int gauge1Decimal = gauge1->decimalPlaces;
-  writeToDisplay(gauge1Label, 1, 1);
-  writeToDisplay(gauge1Value, gauge1Decimal, 1, 5);
+  lcd.setCursor(0,0);
+  //writeToDisplay(gauge1Label, 1, 1);
+  lcd.print(gauge1Label);
+
+  lcd.setCursor(4,0);
+  //writeToDisplay(gauge1Value, gauge1Decimal, 1, 5);
+  static char outstr1[15];
+  dtostrf(gauge1Value,4, gauge1Decimal, outstr1);
+  lcd.print(outstr1);
+
+  
   drawBar(gauge1, 1, 9, 8);
 
   char* gauge2Label = gauge2->shortLabel;
   float gauge2Value = gauge2->currentValue;
   int gauge2Decimal = gauge2->decimalPlaces;
-  writeToDisplay(gauge2Label, 2, 1);
-  writeToDisplay(gauge2Value, gauge2Decimal, 2, 5);
+  
+  lcd.setCursor(0, 1);
+  lcd.print(gauge2Label);
+  //writeToDisplay(gauge2Label, 2, 1);
+  
+  lcd.setCursor(4,1);
+  static char outstr2[15];
+  dtostrf(gauge2Value,4, gauge2Decimal, outstr2);
+  lcd.print(outstr2);
+  //writeToDisplay(gauge2Value, gauge2Decimal, 2, 5);
+  
   drawBar(gauge2, 2, 9, 8);
 }
 
 void bootAnimation() {
   int smallDelay = 30;
   int bigDelay = 200;
-
+/*
   writeSpecialToDisplay(BLOCK, 1, 1);
   writeSpecialToDisplay(BLOCK, 2, 16);
   delay(smallDelay);
@@ -1073,5 +1217,6 @@ void bootAnimation() {
   delay(smallDelay);
   writeSpecialToDisplay(SPACE, 1, 16);
   writeSpecialToDisplay(SPACE, 2, 1);
-
+*/
 }
+
