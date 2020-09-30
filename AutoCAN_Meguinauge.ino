@@ -688,6 +688,7 @@ void drawWarmup()
     static char outstr[15];
     dtostrf(engine_clt.currentValue,4, engine_clt.decimalPlaces, outstr);
     lcd.print(outstr);
+    lcd.print((char)223); //degree symbol
 
     drawBar(startupCLT, 160.0, engine_clt.currentValue, 1, 0, 16);
   }
