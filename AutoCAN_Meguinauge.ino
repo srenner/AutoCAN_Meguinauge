@@ -41,14 +41,7 @@ typedef struct {
   uint8_t* data;
 } canData;
 
-#define MS_BASE_ID    1512  // set this to match the MegaSquirt setting, default is 1512
-#define MSG_MS_BASE   0     // array index of allCanMessages[] to find the base id
-#define MSG_MS_PLUS1  1     // array index 
-#define MSG_MS_PLUS2  2     // etc...
-#define MSG_MS_PLUS3  3     // ...
-#define MSG_MS_PLUS4  4     // last element of array
-
-volatile canData* allCanMessages[5];  //array of all CAN messages we are interested in receiving
+volatile canData* allCanMessages[5];  //array of all MegaSquirt CAN messages we are interested in receiving
 
 volatile canData canBase;
 volatile canData canPlus1;
