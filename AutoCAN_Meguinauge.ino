@@ -62,9 +62,6 @@ uint8_t canBufferTemp[8] = {};
 
 // SET UP PINS //////////////////////////////////////////////////
 
-//This version of AltSoftSerial hard-codes the pins to 9 (rx) and 5(tx)
-//This also disables PWM on 6 and 7
-
 const byte LED_ERR = 7;      // 'check engine' light
 const byte LED_SHIFT = 8;    // shift light
 const byte BUTTON_PIN = 9;   // pushbutton to cycle through modes
@@ -79,8 +76,6 @@ const uint8_t DB4_PIN = 11;
 LiquidCrystal lcd(RS_PIN, EN_PIN, DB4_PIN, DB5_PIN, DB6_PIN, DB7_PIN);
 
 // CUSTOM LCD CHARACTERS ////////////////////////////////////////
-
-// CREATE CUSTOM LCD CHARACTERS //////////////////////////
 
 byte fill1[8] = {
   0x10,
@@ -132,7 +127,6 @@ byte fill5[8] = {
   0x1F,
   0x1F
 };
-
 byte fillMiddle[8] = {
   0x04,
   0x04,
@@ -143,7 +137,6 @@ byte fillMiddle[8] = {
   0x04,
   0x04  
 };
-
 byte fillNothing[8] = {
   0x00,
   0x00,
@@ -166,10 +159,6 @@ enum customCharacters {
 };
 
 // BUILD ENGINE VARIABLES ///////////////////////////////////////
-
-#pragma region engine variables
-//moved to library AutoCAN.h
-#pragma endregion
 
 bool shiftLight = false;
 bool previousShiftLight = false;
