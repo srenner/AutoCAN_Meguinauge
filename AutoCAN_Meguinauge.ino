@@ -14,7 +14,12 @@
 #define DEBUG_CAN false       //print can message counts  to serial
 #define DEBUG_ENG false       //print engine variables to serial
 
-#define USE_SENSORHUB true    //use values directly from AutoCAN_SensorHub instead of MegaSquirt wherever possible
+#define USE_SENSORHUB_VSS true    //true to read vss from AutoCAN_SensorHub instead of MegaSquirt
+#define USE_SENSORHUB_FPR false   //true to read fuel pressure from AutoCAN_SensorHub
+#define USE_SENSORHUB_OIL false   //true to read oil pressure from AutoCAN_SensorHub
+#define USE_SENSORHUB_GPS false   //true to read gps coordinates from AutoCAN_SensorHub
+#define USE_SENSORHUB_XYZ false   //true to read accelerometer data from AutoCAN_SensorHub
+
 
 // CAN BUS OBJECTS //////////////////////////////////////////////
 
@@ -848,7 +853,7 @@ void processCanMessages()
 
   ////////////////////
 
-  if(USE_SENSORHUB)
+  if(USE_SENSORHUB_VSS)
   {
     engine_vss.previousValue = engine_vss.currentValue;
     engine_vss.currentValue = sensorHubMph;
