@@ -712,7 +712,6 @@ void processCanMessages()
     engine_rpm.canCounter = allCanMessages[MSG_MS_BASE]->counter;
     incrementQualityCounters(&engine_rpm);
   }
-
   
   if(engine_clt.canCounter < allCanMessages[MSG_MS_BASE]->counter)
   {
@@ -829,7 +828,6 @@ void processCanMessages()
     incrementQualityCounters(&engine_sr1);
   }
 
-
   if(engine_sr2.canCounter < allCanMessages[MSG_MS_PLUS3]->counter)
   {
     //not tested
@@ -867,8 +865,6 @@ void processCanMessages()
     }
   }
   
-
-
   if(engine_tcr.canCounter < allCanMessages[MSG_MS_PLUS4]->counter)
   {
     //not tested
@@ -927,9 +923,7 @@ void processCanMessages()
     }
     Serial.println("");
     Serial.println("~~~~~");
-
   }
-        
 }
 
 void serialPrintCanData(volatile canData *canMsg)
