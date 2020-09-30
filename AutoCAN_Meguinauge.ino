@@ -8,14 +8,13 @@
   CONFIGURATION NOTES
   ===================
   - setting DEBUG true outputs messages to the serial port
-  - define BLOCK as whichever ASCII character you want to use in the bar graphs
 */
 
-#define DEBUG false              //print out debug messages on serial port
-#define DEBUG_CAN false         //print can message counts  to serial
-#define DEBUG_ENG false          //print engine variables to serial
-#define BLOCK 255               //block character to build bar graphs
-#define SPACE 32                //space character for start animation
+#define DEBUG false           //print out debug messages on serial port
+#define DEBUG_CAN false       //print can message counts  to serial
+#define DEBUG_ENG false       //print engine variables to serial
+
+#define USE_SENSORHUB true    //use values directly from AutoCAN_SensorHub instead of MegaSquirt wherever possible
 
 // CAN BUS OBJECTS //////////////////////////////////////////////
 
@@ -27,7 +26,7 @@ uint8_t canBuffer[8] = {};
 
 volatile unsigned long canCount = 0;
 volatile unsigned long canUnhandledCount = 0;
-volatile float mph = 0.0;
+volatile float sensorHubMph = 0.0;
 
 volatile st_cmd_t canMsg;
 
@@ -299,11 +298,10 @@ ISR(CANIT_vect) {
         fillCanDataBuffer(MSG_MS_PLUS4, &canTemp);
         break;
       case CAN_SH_VSS_MSG_ID:
-        canUnhandledCount++;
-        mph = ((canTemp.data[0] * 256) + canTemp.data[1]) / 10.0; 
+        sensorHubMph = ((canTemp.data[0] * 256) + canTemp.data[1]) / 10.0; 
         break;
       default:
-        //canUnhandledCount++;
+        canUnhandledCount++;
         break;
     }
   }
@@ -862,14 +860,24 @@ void processCanMessages()
 
   ////////////////////
 
-  if(engine_vss.canCounter < allCanMessages[MSG_MS_PLUS4]->counter)
+  if(USE_SENSORHUB)
   {
-    //not tested
     engine_vss.previousValue = engine_vss.currentValue;
-    engine_vss.currentValue = (allCanMessages[MSG_MS_PLUS4]->data[0] * 256 + allCanMessages[MSG_MS_PLUS4]->data[1]) / 10.0;
-    engine_vss.canCounter = allCanMessages[MSG_MS_PLUS4]->counter;
+    engine_vss.currentValue = sensorHubMph;
     incrementQualityCounters(&engine_vss);
   }
+  else
+  {
+    if(engine_vss.canCounter < allCanMessages[MSG_MS_PLUS4]->counter)
+    {
+      engine_vss.previousValue = engine_vss.currentValue;
+      engine_vss.currentValue = (allCanMessages[MSG_MS_PLUS4]->data[0] * 256 + allCanMessages[MSG_MS_PLUS4]->data[1]) / 10.0;
+      engine_vss.canCounter = allCanMessages[MSG_MS_PLUS4]->counter;
+      incrementQualityCounters(&engine_vss);
+    }
+  }
+  
+
 
   if(engine_tcr.canCounter < allCanMessages[MSG_MS_PLUS4]->counter)
   {
