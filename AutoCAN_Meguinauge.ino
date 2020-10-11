@@ -1039,14 +1039,14 @@ void calculateShiftLight()
 
 void drawSingleGauge(EngineVariable* gauge)
 {
-  char* gaugeLabel = gauge->shortLabel;
+  char* gaugeLabel = gauge->longLabel;
   float gaugeValue = gauge->currentValue;
   int gaugeDecimal = gauge->decimalPlaces;
   lcd.setCursor(0,0);
   lcd.print(gaugeLabel);
-  lcd.setCursor(4,0);
+  lcd.setCursor(10,0);
   static char outstr[15];
-  dtostrf(gaugeValue,4, gaugeDecimal, outstr);
+  dtostrf(gaugeValue,5, gaugeDecimal, outstr);
   lcd.print(outstr);
   drawBar(gauge, 2, 1, 16);
 }
