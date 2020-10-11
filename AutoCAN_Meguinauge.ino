@@ -14,12 +14,12 @@
 #define DEBUG_CAN false       //print can message counts  to serial
 #define DEBUG_ENG false       //print engine variables to serial
 
-#define USE_SENSORHUB_VSS true    //true to read vss from AutoCAN_SensorHub instead of MegaSquirt
-#define USE_SENSORHUB_FPR false   //true to read fuel pressure from AutoCAN_SensorHub
-#define USE_SENSORHUB_OIL false   //true to read oil pressure from AutoCAN_SensorHub
-#define USE_SENSORHUB_GPS true    //true to read gps coordinates and time/date from AutoCAN_SensorHub
-#define USE_SENSORHUB_XYZ false   //true to read accelerometer data from AutoCAN_SensorHub
-
+#define USE_SENSORHUB_VSS true      //true to read vss from AutoCAN_SensorHub instead of MegaSquirt
+#define USE_SENSORHUB_FPR false     //true to read fuel pressure from AutoCAN_SensorHub
+#define USE_SENSORHUB_OIL false     //true to read oil pressure from AutoCAN_SensorHub
+#define USE_SENSORHUB_GPS true      //true to read gps coordinates and time/date from AutoCAN_SensorHub
+#define USE_SENSORHUB_ACCEL false   //true to read accelerometer data from AutoCAN_SensorHub
+#define USE_SENSORHUB_COMPASS true  
 
 // CAN BUS OBJECTS //////////////////////////////////////////////
 
@@ -194,6 +194,9 @@ enum DisplayType {
   diagnostic
 };
 
+volatile datetime datetimeCAN; //collect datetime from ISR
+datetime datetimeSafe;      //use this datetime for calc and display
+
 struct Display
 {
   DisplayType type;
@@ -287,6 +290,13 @@ ISR(CANIT_vect) {
       case CAN_SH_VSS_MSG_ID:
         sensorHubMph = ((canTemp.data[1] * 256) + canTemp.data[0]) / 10.0; 
         break;
+      case CAN_SH_CLK_MSG_ID:
+        datetimeCAN.hour     = canTemp.data[0];
+        datetimeCAN.minute   = canTemp.data[1];
+        datetimeCAN.second   = canTemp.data[2];
+        datetimeCAN.month    = canTemp.data[3];
+        datetimeCAN.day      = canTemp.data[4];
+        datetimeCAN.year     = ((canTemp.data[6] * 256) + canTemp.data[5]);
       default:
         canUnhandledCount++;
         break;
@@ -473,7 +483,7 @@ void loop() {
 
   if(DEBUG)
   {
-    char* formattedRuntime = formatTime(millis());
+    char* formattedRuntime = formatRuntime(millis());
     Serial.println(formattedRuntime);
   }
 
@@ -597,7 +607,7 @@ void loop() {
   }
 }
 
-char* formatTime(unsigned long milliseconds)
+char* formatRuntime(unsigned long milliseconds)
 {
   unsigned long seconds = milliseconds / 1000;
   int runHours = seconds / 3600;
@@ -686,7 +696,22 @@ void drawRuntime()
 
   if(USE_SENSORHUB_GPS)
   {
+    char formattedDateTime[11];
+    sprintf(formattedDateTime, "%02d:%02d %02d/%02d", datetimeSafe.hour, datetimeSafe.minute, datetimeSafe.month, datetimeSafe.day);
 
+    lcd.setCursor(0,0);
+    lcd.print(formattedDateTime);
+    lcd.setCursor(14,0);
+    if(USE_SENSORHUB_COMPASS)
+    {
+      lcd.print("NW");
+    }
+    lcd.setCursor(0,1);
+    char* formattedRuntime = formatRuntime(millis());
+    lcd.print(formattedRuntime);
+
+    lcd.setCursor(9,1);
+    lcd.print("999.9mi");
   }
 
   else
@@ -694,7 +719,7 @@ void drawRuntime()
     lcd.setCursor(0,0);
     lcd.print("Runtime");
 
-    char* formattedRuntime = formatTime(millis());
+    char* formattedRuntime = formatRuntime(millis());
     lcd.setCursor(8,0);
     lcd.print(formattedRuntime);    
   }
@@ -887,6 +912,17 @@ void processCanMessages()
     engine_lct.previousValue = (allCanMessages[MSG_MS_PLUS4]->data[4] * 256 + allCanMessages[MSG_MS_PLUS4]->data[5]) / 10.0;
     engine_lct.canCounter = allCanMessages[MSG_MS_PLUS4]->counter;
     incrementQualityCounters(&engine_lct);
+  }
+
+  if(USE_SENSORHUB_GPS)
+  {
+    //cannot copy directly, doing it manually is clunky but maybe less brittle than memcpy
+    datetimeSafe.hour     = datetimeCAN.hour;
+    datetimeSafe.minute   = datetimeCAN.minute;
+    datetimeSafe.second   = datetimeCAN.second;
+    datetimeSafe.month    = datetimeCAN.month;
+    datetimeSafe.day      = datetimeCAN.day;
+    datetimeSafe.year     = datetimeCAN.year;
   }
 
   if(DEBUG_ENG && false)
