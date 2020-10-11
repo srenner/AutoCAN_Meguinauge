@@ -285,7 +285,7 @@ ISR(CANIT_vect) {
         fillCanDataBuffer(MSG_MS_PLUS4, &canTemp);
         break;
       case CAN_SH_VSS_MSG_ID:
-        sensorHubMph = ((canTemp.data[0] * 256) + canTemp.data[1]) / 10.0; 
+        sensorHubMph = ((canTemp.data[1] * 256) + canTemp.data[0]) / 10.0; 
         break;
       default:
         canUnhandledCount++;
