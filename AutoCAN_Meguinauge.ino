@@ -60,9 +60,9 @@ uint8_t canBufferTemp[8] = {};
 
 // SET UP PINS //////////////////////////////////////////////////
 
-const byte LED_ERR = 7;      // 'check engine' light
-const byte LED_SHIFT = 8;    // shift light
-const byte BUTTON_PIN = 9;   // pushbutton to cycle through modes
+const uint8_t LED_ERR = 7;      // 'check engine' light
+const uint8_t LED_SHIFT = 8;    // shift light
+const uint8_t BUTTON_PIN = 9;   // pushbutton to cycle through modes
 
 const uint8_t RS_PIN = 14;
 const uint8_t EN_PIN = 15;
@@ -75,7 +75,7 @@ LiquidCrystal lcd(RS_PIN, EN_PIN, DB4_PIN, DB5_PIN, DB6_PIN, DB7_PIN);
 
 // CUSTOM LCD CHARACTERS ////////////////////////////////////////
 
-byte fill1[8] = {
+uint8_t fill1[8] = {
   0x10,
   0x10,
   0x10,
@@ -85,7 +85,7 @@ byte fill1[8] = {
   0x10,
   0x10
 };
-byte fill2[8] = {
+uint8_t fill2[8] = {
   0x18,
   0x18,
   0x18,
@@ -95,7 +95,7 @@ byte fill2[8] = {
   0x18,
   0x18
 };
-byte fill3[8] = {
+uint8_t fill3[8] = {
   0x1C,
   0x1C,
   0x1C,
@@ -105,7 +105,7 @@ byte fill3[8] = {
   0x1C,
   0x1C
 };
-byte fill4[8] = {
+uint8_t fill4[8] = {
   0x1E,
   0x1E,
   0x1E,
@@ -115,7 +115,7 @@ byte fill4[8] = {
   0x1E,
   0x1E
 };
-byte fill5[8] = {
+uint8_t fill5[8] = {
   0x1F,
   0x1F,
   0x1F,
@@ -125,7 +125,7 @@ byte fill5[8] = {
   0x1F,
   0x1F
 };
-byte fillMiddle[8] = {
+uint8_t fillMiddle[8] = {
   0x04,
   0x04,
   0x04,
@@ -135,7 +135,7 @@ byte fillMiddle[8] = {
   0x04,
   0x04  
 };
-byte fillNothing[8] = {
+uint8_t fillNothing[8] = {
   0x00,
   0x00,
   0x00,
@@ -179,7 +179,7 @@ unsigned long endPolling = 0;
 unsigned int pollCount = 0;
 unsigned int maxPollingDelay = 0;
 unsigned int pollingDelayLimit = 10;
-byte displayInterval = 100;
+uint8_t displayInterval = 100;
 unsigned long lastDisplayMillis = 0;
 unsigned int diagnosticInterval = 5000;
 unsigned long lastDiagnosticMillis = 0;
@@ -201,8 +201,8 @@ struct Display
   EngineVariable* gauge2;
 };
 
-const byte DISPLAY_COUNT = 16;
-byte currentDisplayIndex = 0;
+const uint8_t DISPLAY_COUNT = 16;
+uint8_t currentDisplayIndex = 0;
 Display* allDisplays[DISPLAY_COUNT];
 Display display_warmup    = {warmup, NULL, NULL};
 Display display_runtime   = {runtime, NULL, NULL};
@@ -223,7 +223,7 @@ Display display_pw1       = {single, &engine_pw1, NULL};
 
 bool inError = false;
 
-const byte DEBOUNCE_DELAY = 250;
+const uint8_t DEBOUNCE_DELAY = 250;
 const int REBOOT_DELAY = 2000;
 const int SHIFT_LIGHT_FROM_REDLINE_WOT = 500;
 const int SHIFT_LIGHT_FROM_REDLINE_CRUISE = 1000;
@@ -957,11 +957,11 @@ void drawBar(EngineVariable* engineVar, int row, int column, int maxLength) {
   for(int i = 0; i < maxLength; i++) {
     if(i > length) {
       lcd.setCursor(column-1+i, row-1);
-      lcd.write((byte)charBlank);
+      lcd.write((uint8_t)charBlank);
     }
     else {
       lcd.setCursor(column-1+i, row-1);
-      lcd.write((byte)charBlock5);
+      lcd.write((uint8_t)charBlock5);
     }
   }
 }
@@ -982,13 +982,13 @@ void drawBar(float lowValue, float highValue, float currentValue, int row, int c
 }
 
 bool calculateErrorLight() {
-  byte len = 20; //sizeof(allGauges);
+  uint8_t len = 20; //sizeof(allGauges);
   unsigned long badCount;
   unsigned long totalCount;
-  byte percent;
+  uint8_t percent;
   bool inError = false;
   
-  for(byte i = 0; i < len; i++) {
+  for(uint8_t i = 0; i < len; i++) {
     badCount = allGauges[i]->lowCount + allGauges[i]->highCount;
     totalCount = badCount + allGauges[i]->goodCount;
     percent = badCount * 100 / totalCount;
