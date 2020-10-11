@@ -17,7 +17,7 @@
 #define USE_SENSORHUB_VSS true    //true to read vss from AutoCAN_SensorHub instead of MegaSquirt
 #define USE_SENSORHUB_FPR false   //true to read fuel pressure from AutoCAN_SensorHub
 #define USE_SENSORHUB_OIL false   //true to read oil pressure from AutoCAN_SensorHub
-#define USE_SENSORHUB_GPS false   //true to read gps coordinates from AutoCAN_SensorHub
+#define USE_SENSORHUB_GPS true    //true to read gps coordinates and time/date from AutoCAN_SensorHub
 #define USE_SENSORHUB_XYZ false   //true to read accelerometer data from AutoCAN_SensorHub
 
 
@@ -683,12 +683,21 @@ void drawWarmup()
 
 void drawRuntime()
 {
-  lcd.setCursor(0,0);
-  lcd.print("Runtime");
 
-  char* formattedRuntime = formatTime(millis());
-  lcd.setCursor(8,0);
-  lcd.print(formattedRuntime);
+  if(USE_SENSORHUB_GPS)
+  {
+
+  }
+
+  else
+  {
+    lcd.setCursor(0,0);
+    lcd.print("Runtime");
+
+    char* formattedRuntime = formatTime(millis());
+    lcd.setCursor(8,0);
+    lcd.print(formattedRuntime);    
+  }
 }
 
 void processCanMessages()
