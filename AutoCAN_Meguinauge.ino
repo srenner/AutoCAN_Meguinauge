@@ -19,7 +19,9 @@
 #define USE_SENSORHUB_OIL false     //true to read oil pressure from AutoCAN_SensorHub
 #define USE_SENSORHUB_GPS true      //true to read gps coordinates and time/date from AutoCAN_SensorHub
 #define USE_SENSORHUB_ACCEL false   //true to read accelerometer data from AutoCAN_SensorHub
-#define USE_SENSORHUB_COMPASS true  
+#define USE_SENSORHUB_COMPASS true
+
+#define USE_24HOUR_TIME true        //13:00 vs 01:00pm, etc.
 
 // CAN BUS OBJECTS /////////////////////////////////////////////////////////////
 
@@ -696,14 +698,37 @@ void drawRuntime()
 
   if(USE_SENSORHUB_GPS)
   {
-    char formattedDateTime[11];
-    sprintf(formattedDateTime, "%02d:%02d %02d/%02d", datetimeSafe.hour, datetimeSafe.minute, datetimeSafe.month, datetimeSafe.day);
+    char formattedTime[7];
+
+    uint8_t hour = datetimeSafe.hour;
+    char* ampm = "";
+    if(!USE_24HOUR_TIME)
+    {
+      if(hour > 12)
+      {
+        hour = hour - 12;
+        ampm = "pm";
+      }
+      else
+      {
+        ampm = "am";
+      }
+
+    }
+
+    sprintf(formattedTime, "%02d:%02d", datetimeSafe.hour, datetimeSafe.minute);  
+
+
+
+    //sprintf(formattedDateTime, "%02d:%02d %02d/%02d", datetimeSafe.hour, datetimeSafe.minute, datetimeSafe.month, datetimeSafe.day);
 
     lcd.setCursor(0,0);
-    lcd.print(formattedDateTime);
-    lcd.setCursor(14,0);
+    lcd.print(formattedTime);
+    lcd.print(ampm);
+
     if(USE_SENSORHUB_COMPASS)
     {
+      lcd.setCursor(14,0);
       lcd.print(compassDirections[compassDirectionIndexSafe]);
     }
     lcd.setCursor(0,1);
@@ -721,7 +746,7 @@ void drawRuntime()
 
     char* formattedRuntime = formatRuntime(millis());
     lcd.setCursor(8,0);
-    lcd.print(formattedRuntime);    
+    lcd.print(formattedRuntime);
   }
 }
 
