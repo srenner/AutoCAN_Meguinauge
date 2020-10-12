@@ -21,7 +21,7 @@
 #define USE_SENSORHUB_ACCEL false   //true to read accelerometer data from AutoCAN_SensorHub
 #define USE_SENSORHUB_COMPASS true  
 
-// CAN BUS OBJECTS //////////////////////////////////////////////
+// CAN BUS OBJECTS /////////////////////////////////////////////////////////////
 
 uint8_t canBuffer[8] = {};
 
@@ -58,7 +58,7 @@ uint8_t canBufferPlus4[8] = {};
 volatile canData canTemp;
 uint8_t canBufferTemp[8] = {};
 
-// SET UP PINS //////////////////////////////////////////////////
+// SET UP PINS /////////////////////////////////////////////////////////////////
 
 const uint8_t LED_ERR = 7;      // 'check engine' light
 const uint8_t LED_SHIFT = 8;    // shift light
@@ -73,7 +73,7 @@ const uint8_t DB4_PIN = 11;
 
 LiquidCrystal lcd(RS_PIN, EN_PIN, DB4_PIN, DB5_PIN, DB6_PIN, DB7_PIN);
 
-// CUSTOM LCD CHARACTERS ////////////////////////////////////////
+// CUSTOM LCD CHARACTERS ///////////////////////////////////////////////////////
 
 uint8_t fill1[8] = {
   0x10,
@@ -146,17 +146,7 @@ uint8_t fillNothing[8] = {
   0x00
 };
 
-enum customCharacters {
-  charBlock1         = 0,
-  charBlock2         = 1,
-  charBlock3         = 2,
-  charBlock4         = 3,
-  charBlock5         = 4,
-  charMiddle         = 5,
-  charBlank          = 6
-};
-
-// BUILD ENGINE VARIABLES ///////////////////////////////////////
+// BUILD ENGINE VARIABLES //////////////////////////////////////////////////////
 
 bool shiftLight = false;
 bool previousShiftLight = false;
@@ -165,12 +155,12 @@ bool currentButtonValue = 1;
 bool previousButtonValue = 1;
 unsigned long buttonMillis = 0;
 
-// WARMUP VARIABLES ///////////////////////////////////
+// WARMUP VARIABLES ////////////////////////////////////////////////////////////
 
 const float STARTUP_CLT_VALUE = -200.0;
 float startupCLT = STARTUP_CLT_VALUE;
 
-// LOOP TIMER VARIABLES ///////////////////////////////
+// LOOP TIMER VARIABLES ////////////////////////////////////////////////////////
 
 unsigned long currentMillis = 0;
 unsigned long previousMillis = 0;
@@ -184,7 +174,7 @@ unsigned long lastDisplayMillis = 0;
 unsigned int diagnosticInterval = 5000;
 unsigned long lastDiagnosticMillis = 0;
 
-// MODE VARIABLES ////////////////////////////////////
+// MODE VARIABLES //////////////////////////////////////////////////////////////
 
 enum DisplayType {
   warmup,
@@ -193,9 +183,6 @@ enum DisplayType {
   dual,
   diagnostic
 };
-
-volatile datetime datetimeCAN; //collect datetime from ISR
-datetime datetimeSafe;      //use this datetime for calc and display
 
 struct Display
 {
@@ -230,6 +217,15 @@ const uint8_t DEBOUNCE_DELAY = 250;
 const int REBOOT_DELAY = 2000;
 const int SHIFT_LIGHT_FROM_REDLINE_WOT = 500;
 const int SHIFT_LIGHT_FROM_REDLINE_CRUISE = 1000;
+
+// SENSORHUB VARIABLES /////////////////////////////////////////////////////////
+
+volatile datetime datetimeCAN;
+datetime datetimeSafe;
+
+uint8_t compassDirectionIndexCAN = 8;
+uint8_t compassDirectionIndexSafe = 8;
+
 
 void(* resetFunc) (void) = 0; //declare killswitch function
 
@@ -297,6 +293,10 @@ ISR(CANIT_vect) {
         datetimeCAN.month    = canTemp.data[3];
         datetimeCAN.day      = canTemp.data[4];
         datetimeCAN.year     = ((canTemp.data[6] * 256) + canTemp.data[5]);
+        break;
+      case CAN_SH_COMPASS_MSG_ID:
+        compassDirectionIndexCAN = canTemp.data[2];
+        break;
       default:
         canUnhandledCount++;
         break;
@@ -704,7 +704,7 @@ void drawRuntime()
     lcd.setCursor(14,0);
     if(USE_SENSORHUB_COMPASS)
     {
-      lcd.print("NW");
+      lcd.print(compassDirections[compassDirectionIndexSafe]);
     }
     lcd.setCursor(0,1);
     char* formattedRuntime = formatRuntime(millis());
@@ -923,6 +923,11 @@ void processCanMessages()
     datetimeSafe.month    = datetimeCAN.month;
     datetimeSafe.day      = datetimeCAN.day;
     datetimeSafe.year     = datetimeCAN.year;
+  }
+
+  if(USE_SENSORHUB_COMPASS)
+  {
+    compassDirectionIndexSafe = compassDirectionIndexCAN;
   }
 
   if(DEBUG_ENG && false)
