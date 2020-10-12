@@ -228,6 +228,8 @@ datetime datetimeSafe;
 uint8_t compassDirectionIndexCAN = 8;
 uint8_t compassDirectionIndexSafe = 8;
 
+uint32_t vssPulseCAN = 0;
+uint32_t vssPulseSafe = 0;
 
 void(* resetFunc) (void) = 0; //declare killswitch function
 
@@ -286,7 +288,22 @@ ISR(CANIT_vect) {
         fillCanDataBuffer(MSG_MS_PLUS4, &canTemp);
         break;
       case CAN_SH_VSS_MSG_ID:
-        sensorHubMph = ((canTemp.data[1] * 256) + canTemp.data[0]) / 10.0; 
+        if(USE_SENSORHUB_VSS)
+        {
+          sensorHubMph = ((canTemp.data[1] * 256) + canTemp.data[0]) / 10.0;
+          
+          union
+          {
+            long vss;
+            byte buf[4];
+          } vssUnion;
+          
+          vssUnion.buf[0] = canTemp.data[2];
+          vssUnion.buf[1] = canTemp.data[3];
+          vssUnion.buf[2] = canTemp.data[4];
+          vssUnion.buf[3] = canTemp.data[5];
+          vssPulseCAN = vssUnion.vss;
+        }
         break;
       case CAN_SH_CLK_MSG_ID:
         datetimeCAN.hour     = canTemp.data[0];
@@ -624,7 +641,14 @@ char* formatRuntime(unsigned long milliseconds)
     char* ret = buf;
     return ret;
   }
-  
+}
+
+double getTripOdometer()
+{
+  //VSS_PULSE_PER_MILE
+
+  double trip = (double)vssPulseSafe / (double)VSS_PULSE_PER_MILE;
+  return trip;
 }
 
 void nextDisplay() 
@@ -740,7 +764,40 @@ void drawRuntime()
     lcd.print(formattedRuntime);
 
     lcd.setCursor(9,1);
-    lcd.print("999.9mi");
+
+    double trip = getTripOdometer();
+    //trip = 9.9;
+
+    if(trip >= 1000.0)
+    {
+      char str_temp[5];
+      dtostrf(trip, 5, 0, str_temp);
+
+      lcd.print(str_temp);
+    }
+    else if(trip >= 100.0)
+    {
+      char str_temp[5];
+      dtostrf(trip, 5, 1, str_temp);
+      lcd.print(str_temp);
+
+    }
+    else if(trip >= 10.0)
+    {
+      char str_temp[5];
+      dtostrf(trip, 5, 2, str_temp);
+      lcd.print(str_temp);
+    }
+    else
+    {
+      char str_temp[5];
+      dtostrf(trip, 5, 3, str_temp);
+      lcd.print(str_temp);
+    }
+
+
+    lcd.print("mi");
+    
   }
 
   else
@@ -914,6 +971,8 @@ void processCanMessages()
     engine_vss.previousValue = engine_vss.currentValue;
     engine_vss.currentValue = sensorHubMph;
     incrementQualityCounters(&engine_vss);
+
+    vssPulseSafe = vssPulseCAN;
   }
   else
   {
