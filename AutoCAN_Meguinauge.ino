@@ -725,8 +725,6 @@ void drawRuntime()
   if(USE_SENSORHUB_GPS)
   {
     lcd.setCursor(0,0);
-
-
     if(datetimeSafe.month < 1)
     {
       lcd.print("No GPS");
@@ -748,12 +746,10 @@ void drawRuntime()
           ampm = "am ";         //ampm is 3 chars to cover up entire "No GPS" string
         }
       }
-
       sprintf(formattedTime, "%02d:%02d", hour, datetimeSafe.minute);
       lcd.print(formattedTime);
       lcd.print(ampm);
     }
-
     if(USE_SENSORHUB_COMPASS)
     {
       lcd.setCursor(14,0);
@@ -762,17 +758,12 @@ void drawRuntime()
     lcd.setCursor(0,1);
     char* formattedRuntime = formatRuntime(millis());
     lcd.print(formattedRuntime);
-
     lcd.setCursor(9,1);
-
     double trip = getTripOdometer();
-    //trip = 9.9;
-
     if(trip >= 1000.0)
     {
       char str_temp[5];
       dtostrf(trip, 5, 0, str_temp);
-
       lcd.print(str_temp);
     }
     else if(trip >= 100.0)
@@ -780,7 +771,6 @@ void drawRuntime()
       char str_temp[5];
       dtostrf(trip, 5, 1, str_temp);
       lcd.print(str_temp);
-
     }
     else if(trip >= 10.0)
     {
@@ -794,12 +784,8 @@ void drawRuntime()
       dtostrf(trip, 5, 3, str_temp);
       lcd.print(str_temp);
     }
-
-
     lcd.print("mi");
-    
   }
-
   else
   {
     lcd.setCursor(0,0);
