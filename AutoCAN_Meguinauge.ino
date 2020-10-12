@@ -316,7 +316,6 @@ void fillCanDataBuffer(int index, canData* canTemp)
 
 void setup() {
   lcd.begin(16, 2);
-  //  lcd.print("hello world");
 
   lcd.createChar(charBlock1, fill1);
   lcd.createChar(charBlock2, fill2);
@@ -362,7 +361,6 @@ void setup() {
   clearBuffer(&canBufferPlus4[0]);
   canPlus4.data = &canBufferPlus4[0];
   allCanMessages[4] = &canPlus4;
-
 
   #pragma region set allGauges
   allGauges[0] = &engine_map;
@@ -453,9 +451,6 @@ void setup() {
     Serial.println("CAN bus initialized");
   }
 
-  //clearBuffer(&canBufferTemp[0]);
-  //canMsg.pt_data = &canBufferTemp[0];
-
   clearBuffer(&canBuffer[0]);
   canMsg.cmd      = CMD_RX_DATA;
   canMsg.pt_data  = &canBuffer[0];
@@ -472,13 +467,11 @@ void setup() {
   //datasheet section 7.3 Watchdog Timer
   //enable watchdog timer (WDCE, WDE) and set timing (WDP0, WDP1)
   //WDTCR = (1<<WDCE) | (1<<WDE) | (1 << WDP0) | (1 << WDP1);
-
 }
 
 bool canCheckComplete = false;
 
 void loop() {
-
   noInterrupts();
   processCanMessages();
   interrupts();
@@ -669,7 +662,6 @@ void drawDisplay()
   {
     drawRuntime();
   }
-
 }
 
 void drawWarmup()
@@ -695,36 +687,41 @@ void drawWarmup()
 
 void drawRuntime()
 {
-
   if(USE_SENSORHUB_GPS)
   {
-    char formattedTime[7];
-
-    uint8_t hour = datetimeSafe.hour;
-    char* ampm = "";
-    if(!USE_24HOUR_TIME)
-    {
-      if(hour > 12)
-      {
-        hour = hour - 12;
-        ampm = "pm";
-      }
-      else
-      {
-        ampm = "am";
-      }
-
-    }
-
-    sprintf(formattedTime, "%02d:%02d", datetimeSafe.hour, datetimeSafe.minute);  
-
-
-
-    //sprintf(formattedDateTime, "%02d:%02d %02d/%02d", datetimeSafe.hour, datetimeSafe.minute, datetimeSafe.month, datetimeSafe.day);
-
     lcd.setCursor(0,0);
-    lcd.print(formattedTime);
-    lcd.print(ampm);
+
+
+    if(datetimeSafe.month < 1)
+    {
+      lcd.print("No GPS");
+    }
+    else
+    {
+      char formattedTime[7];
+      uint8_t hour = datetimeSafe.hour;
+      char* ampm = "   ";       //ampm is 3 chars to cover up entire "No GPS" string
+      if(!USE_24HOUR_TIME)
+      {
+        if(hour > 12)
+        {
+          hour = hour - 12;
+          ampm = "pm ";         //ampm is 3 chars to cover up entire "No GPS" string
+        }
+        else
+        {
+          ampm = "am ";         //ampm is 3 chars to cover up entire "No GPS" string
+        }
+      }
+
+      sprintf(formattedTime, "%02d:%02d", hour, datetimeSafe.minute);
+      lcd.print(formattedTime);
+      lcd.print(ampm);
+    }
+    
+
+
+
 
     if(USE_SENSORHUB_COMPASS)
     {
