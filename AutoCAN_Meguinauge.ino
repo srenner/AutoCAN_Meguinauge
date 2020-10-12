@@ -610,10 +610,21 @@ char* formatRuntime(unsigned long milliseconds)
   int runMinutes = secsRemaining / 60;
   int runSeconds = secsRemaining % 60;
 
-  char buf[9];
-  sprintf(buf,"%02d:%02d:%02d",runHours,runMinutes,runSeconds);
-  char* ret = buf;
-  return ret;
+  if(runHours > 0)
+  {
+    char buf[9];
+    sprintf(buf,"%02d:%02d:%02d",runHours,runMinutes,runSeconds);
+    char* ret = buf;
+    return ret;
+  }
+  else
+  {
+    char buf[6];
+    sprintf(buf,"%02d:%02d",runMinutes,runSeconds);
+    char* ret = buf;
+    return ret;
+  }
+  
 }
 
 void nextDisplay() 
@@ -718,10 +729,6 @@ void drawRuntime()
       lcd.print(formattedTime);
       lcd.print(ampm);
     }
-    
-
-
-
 
     if(USE_SENSORHUB_COMPASS)
     {
