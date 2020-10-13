@@ -22,6 +22,7 @@
 #define USE_SENSORHUB_COMPASS true
 
 #define USE_24HOUR_TIME true        //13:00 vs 01:00pm, etc.
+#define USE_NOISY_BUTTON true       //short beep on button press
 
 // CAN BUS OBJECTS /////////////////////////////////////////////////////////////
 
@@ -62,6 +63,7 @@ uint8_t canBufferTemp[8] = {};
 
 // SET UP PINS /////////////////////////////////////////////////////////////////
 
+const uint8_t BUZZER_PIN = 4;   // sound making thing
 const uint8_t LED_ERR = 7;      // 'check engine' light
 const uint8_t LED_SHIFT = 8;    // shift light
 const uint8_t BUTTON_PIN = 9;   // pushbutton to cycle through modes
@@ -175,6 +177,12 @@ uint8_t displayInterval = 100;
 unsigned long lastDisplayMillis = 0;
 unsigned int diagnosticInterval = 5000;
 unsigned long lastDiagnosticMillis = 0;
+
+uint8_t clickBuzzerInterval = 2;
+uint32_t clickBuzzerStartMillis = 0;
+
+uint8_t shortBuzzerInterval = 25;
+uint32_t shortBuzzerStartMillis = 0;
 
 // MODE VARIABLES //////////////////////////////////////////////////////////////
 
@@ -357,6 +365,7 @@ void setup() {
   pinMode(LED_ERR, OUTPUT);
   pinMode(LED_SHIFT, OUTPUT);
   pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(BUZZER_PIN, OUTPUT);
 
   clearBuffer(&canBufferTemp[0]);
   canTemp.data = &canBufferTemp[0];
@@ -505,7 +514,6 @@ void loop() {
   noInterrupts();
   processCanMessages();
   interrupts();
-
   Display* d = allDisplays[currentDisplayIndex];
 
   //calculate 0-60
@@ -517,10 +525,11 @@ void loop() {
       perfStartMillis = millis();
       perfActive = true;
     }
-    if(engine_vss.currentValue >= 60.0)
+    if(perfActive && engine_vss.currentValue >= 60.0)
     {
       perfEndMillis = millis();
       perfActive = false;
+      startShortBuzzer();
     }
     ztsElapsedMillis = millis() - perfStartMillis;
   }
@@ -572,6 +581,10 @@ void loop() {
     if(currentButtonValue == 0) 
     {
       buttonMillis = currentMillis;
+      if(USE_NOISY_BUTTON)
+      {
+        startClickBuzzer();
+      }
       nextDisplay();
     }
     else 
@@ -631,6 +644,18 @@ void loop() {
     canCheckComplete = true;
   }
 
+  if(currentMillis - shortBuzzerStartMillis >= shortBuzzerInterval && shortBuzzerStartMillis > 0)
+  {
+    digitalWrite(BUZZER_PIN, LOW);
+    shortBuzzerStartMillis = 0;
+  }
+
+  if(currentMillis - clickBuzzerStartMillis >= clickBuzzerInterval && clickBuzzerStartMillis > 0)
+  {
+    digitalWrite(BUZZER_PIN, LOW);
+    clickBuzzerStartMillis = 0;
+  }
+
   //draw display
   if(true) {
     if(currentMillis - lastDisplayMillis >= displayInterval && currentMillis > 500) {
@@ -648,10 +673,26 @@ void loop() {
       if(err != inError) {
         inError = err;
         digitalWrite(LED_ERR, err);
+        if(err == true)
+        {
+          startShortBuzzer();
+        }
         Serial.println("ERROR============================================================================");
       }
     }
   }
+}
+
+void startShortBuzzer()
+{
+  digitalWrite(BUZZER_PIN, HIGH);
+  shortBuzzerStartMillis = millis();
+}
+
+void startClickBuzzer()
+{
+  digitalWrite(BUZZER_PIN, HIGH);
+  clickBuzzerStartMillis = millis();
 }
 
 char* formatRuntime(unsigned long milliseconds)
@@ -1226,6 +1267,7 @@ void calculateShiftLight()
   if(shiftLight == true && previousShiftLight == false)
   {
     digitalWrite(LED_SHIFT, HIGH);
+    startShortBuzzer();
     if(DEBUG)
     {
       Serial.println("Shift Light ON");
