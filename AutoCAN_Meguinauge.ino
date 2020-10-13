@@ -183,6 +183,10 @@ enum DisplayType {
   runtime,
   single,
   dual,
+  zerotosixty,
+  sixtytozero,
+  quartermile,
+  gforce,
   diagnostic
 };
 
@@ -193,7 +197,7 @@ struct Display
   EngineVariable* gauge2;
 };
 
-const uint8_t DISPLAY_COUNT = 16;
+const uint8_t DISPLAY_COUNT = 17;
 uint8_t currentDisplayIndex = 0;
 Display* allDisplays[DISPLAY_COUNT];
 Display display_warmup    = {warmup, NULL, NULL};
@@ -212,6 +216,7 @@ Display display_map       = {single, &engine_map, NULL};
 Display display_adv       = {single, &engine_adv, NULL};
 Display display_tps       = {single, &engine_tps, NULL};
 Display display_pw1       = {single, &engine_pw1, NULL};
+Display display_060       = {zerotosixty, NULL, NULL};
 
 bool inError = false;
 
@@ -238,6 +243,13 @@ void clearBuf(volatile uint8_t* Buffer){
     Buffer[i] = 0x00;
   }
 }
+
+// 0-60 variables //////////////////////////////////////////////////////////////
+
+uint32_t perfStartMillis = 0;
+uint32_t perfEndMillis = 0;
+uint32_t ztsElapsedMillis = 0;
+bool perfActive = false;
 
 ISR(CANIT_vect) {
   canCount++;
@@ -420,6 +432,7 @@ void setup() {
   allDisplays[13] = &display_adv;
   allDisplays[14] = &display_tps;
   allDisplays[15] = &display_pw1;
+  allDisplays[16] = &display_060;
 
   #pragma endregion
 
@@ -492,6 +505,28 @@ void loop() {
   noInterrupts();
   processCanMessages();
   interrupts();
+
+  Display* d = allDisplays[currentDisplayIndex];
+
+  //calculate 0-60
+
+  if(d->type == zerotosixty)
+  {
+    if(perfStartMillis == 0 && engine_vss.currentValue > 0.0 && engine_vss.previousValue == 0.0)
+    {
+      perfStartMillis = millis();
+      perfActive = true;
+    }
+    if(engine_vss.currentValue >= 60.0)
+    {
+      perfEndMillis = millis();
+      perfActive = false;
+    }
+    ztsElapsedMillis = millis() - perfStartMillis;
+  }
+
+
+
 
   if(DEBUG)
   {
@@ -660,7 +695,7 @@ void nextDisplay()
   //clearDisplay();
   lcd.clear();
   currentDisplayIndex++;
-  if(currentDisplayIndex >= (DISPLAY_COUNT - 1))
+  if(currentDisplayIndex > (DISPLAY_COUNT - 1))
   {
     currentDisplayIndex = 0;
     if(engine_clt.currentValue > 159.9)
@@ -696,6 +731,10 @@ void drawDisplay()
   else if(d->type == runtime)
   {
     drawRuntime();
+  }
+  else if(d->type == zerotosixty)
+  {
+    drawZeroToSixty();
   }
 }
 
@@ -794,6 +833,48 @@ void drawRuntime()
     char* formattedRuntime = formatRuntime(millis());
     lcd.setCursor(8,0);
     lcd.print(formattedRuntime);
+  }
+}
+
+void drawZeroToSixty()
+{
+  lcd.setCursor(0, 0);
+  lcd.print("0-60 ");
+
+
+
+  char vssBuffer[2];
+  sprintf(vssBuffer,"%02d",(uint16_t)engine_vss.currentValue);
+  lcd.print(vssBuffer);
+
+  lcd.print("mph");
+
+  if(engine_vss.currentValue == 0.0)
+  {
+    perfStartMillis = 0;
+    ztsElapsedMillis = 0;
+    perfEndMillis = 0;
+    lcd.setCursor(0,1);
+    lcd.print("READY!          ");
+
+    lcd.setCursor(11, 0);
+    lcd.print("     ");
+
+  }
+  else 
+  {
+    if(perfActive)
+    {
+      lcd.setCursor(11, 0);
+
+      double elapsedSeconds = (double)ztsElapsedMillis / 1000.0;
+      sprintf(vssBuffer,"%02d",(uint16_t)engine_vss.currentValue);
+      lcd.print(elapsedSeconds,1);
+
+      //lcd.setCursor(0,1);
+      //void drawBar(float lowValue, float highValue, float currentValue, int row, int column, int maxLength)
+      drawBar(0.0, 60.0, engine_vss.currentValue, 1, 0, 16);
+    }
   }
 }
 
