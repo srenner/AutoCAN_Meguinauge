@@ -636,12 +636,6 @@ void loop() {
       if(DEBUG)
       {
         Serial.println("MUST RESET---------------------------------------------");
-        Serial.println("-------------------------------------------------------");
-        Serial.println("-------------------------------------------------------");
-        Serial.println("-------------------------------------------------------");
-        Serial.println("-------------------------------------------------------");
-        Serial.println("-------------------------------------------------------");
-        Serial.println("-------------------------------------------------------");
       }
     }
     canCheckComplete = true;
@@ -719,10 +713,7 @@ char* formatRuntime(uint32_t milliseconds)
 
 double getTripOdometer()
 {
-  //VSS_PULSE_PER_MILE
-
-  double trip = (double)vssPulseSafe / (double)VSS_PULSE_PER_MILE;
-  return trip;
+  return (double)vssPulseSafe / (double)VSS_PULSE_PER_MILE;
 }
 
 void nextDisplay() 
@@ -1332,108 +1323,4 @@ void drawDualGauge(EngineVariable* gauge1, EngineVariable* gauge2)
   lcd.print(outstr2);
   
   drawBar(gauge2, 2, 9, 8);
-}
-
-void bootAnimation() {
-  int smallDelay = 30;
-  int bigDelay = 200;
-/*
-  writeSpecialToDisplay(BLOCK, 1, 1);
-  writeSpecialToDisplay(BLOCK, 2, 16);
-  delay(smallDelay);
-  writeSpecialToDisplay(BLOCK, 1, 2);
-  writeSpecialToDisplay(BLOCK, 2, 15);
-  delay(smallDelay);
-  writeSpecialToDisplay(BLOCK, 1, 3);
-  writeSpecialToDisplay(BLOCK, 2, 14);
-  delay(smallDelay);
-  writeSpecialToDisplay(BLOCK, 1, 4);
-  writeSpecialToDisplay(BLOCK, 2, 13);
-  delay(smallDelay);
-  writeSpecialToDisplay(BLOCK, 1, 5);
-  writeSpecialToDisplay(BLOCK, 2, 12);
-  delay(smallDelay);
-  writeSpecialToDisplay(BLOCK, 1, 6);
-  writeSpecialToDisplay(BLOCK, 2, 11);
-  delay(smallDelay);
-  writeSpecialToDisplay(BLOCK, 1, 7);
-  writeSpecialToDisplay(BLOCK, 2, 10);
-  delay(smallDelay);
-  writeSpecialToDisplay(BLOCK, 1, 8);
-  writeSpecialToDisplay(BLOCK, 2, 9);
-  delay(smallDelay);
-  writeSpecialToDisplay(BLOCK, 1, 9);
-  writeSpecialToDisplay(BLOCK, 2, 8);
-  delay(smallDelay);
-  writeSpecialToDisplay(BLOCK, 1, 10);
-  writeSpecialToDisplay(BLOCK, 2, 7);
-  delay(smallDelay);
-  writeSpecialToDisplay(BLOCK, 1, 11);
-  writeSpecialToDisplay(BLOCK, 2, 6);
-  delay(smallDelay);
-  writeSpecialToDisplay(BLOCK, 1, 12);
-  writeSpecialToDisplay(BLOCK, 2, 5);
-  delay(smallDelay);
-  writeSpecialToDisplay(BLOCK, 1, 13);
-  writeSpecialToDisplay(BLOCK, 2, 4);
-  delay(smallDelay);
-  writeSpecialToDisplay(BLOCK, 1, 14);
-  writeSpecialToDisplay(BLOCK, 2, 3);
-  delay(smallDelay);
-  writeSpecialToDisplay(BLOCK, 1, 15);
-  writeSpecialToDisplay(BLOCK, 2, 2);
-  delay(smallDelay);
-  writeSpecialToDisplay(BLOCK, 1, 16);
-  writeSpecialToDisplay(BLOCK, 2, 1);
-
-  delay(bigDelay);
-
-  writeSpecialToDisplay(SPACE, 1, 1);
-  writeSpecialToDisplay(SPACE, 2, 16);
-  delay(smallDelay);
-  writeSpecialToDisplay(SPACE, 1, 2);
-  writeSpecialToDisplay(SPACE, 2, 15);
-  delay(smallDelay);
-  writeSpecialToDisplay(SPACE, 1, 3);
-  writeSpecialToDisplay(SPACE, 2, 14);
-  delay(smallDelay);
-  writeSpecialToDisplay(SPACE, 1, 4);
-  writeSpecialToDisplay(SPACE, 2, 13);
-  delay(smallDelay);
-  writeSpecialToDisplay(SPACE, 1, 5);
-  writeSpecialToDisplay(SPACE, 2, 12);
-  delay(smallDelay);
-  writeSpecialToDisplay(SPACE, 1, 6);
-  writeSpecialToDisplay(SPACE, 2, 11);
-  delay(smallDelay);
-  writeSpecialToDisplay(SPACE, 1, 7);
-  writeSpecialToDisplay(SPACE, 2, 10);
-  delay(smallDelay);
-  writeSpecialToDisplay(SPACE, 1, 8);
-  writeSpecialToDisplay(SPACE, 2, 9);
-  delay(smallDelay);
-  writeSpecialToDisplay(SPACE, 1, 9);
-  writeSpecialToDisplay(SPACE, 2, 8);
-  delay(smallDelay);
-  writeSpecialToDisplay(SPACE, 1, 10);
-  writeSpecialToDisplay(SPACE, 2, 7);
-  delay(smallDelay);
-  writeSpecialToDisplay(SPACE, 1, 11);
-  writeSpecialToDisplay(SPACE, 2, 6);
-  delay(smallDelay);
-  writeSpecialToDisplay(SPACE, 1, 12);
-  writeSpecialToDisplay(SPACE, 2, 5);
-  delay(smallDelay);
-  writeSpecialToDisplay(SPACE, 1, 13);
-  writeSpecialToDisplay(SPACE, 2, 4);
-  delay(smallDelay);
-  writeSpecialToDisplay(SPACE, 1, 14);
-  writeSpecialToDisplay(SPACE, 2, 3);
-  delay(smallDelay);
-  writeSpecialToDisplay(SPACE, 1, 15);
-  writeSpecialToDisplay(SPACE, 2, 2);
-  delay(smallDelay);
-  writeSpecialToDisplay(SPACE, 1, 16);
-  writeSpecialToDisplay(SPACE, 2, 1);
-*/
 }
