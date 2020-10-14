@@ -32,15 +32,15 @@ uint8_t canBuffer[8] = {};
 #define MESSAGE_LENGTH    8     // Data length: 8 bytes
 #define MESSAGE_RTR       0     // rtr bit
 
-volatile unsigned long canCount = 0;
-volatile unsigned long canUnhandledCount = 0;
+volatile uint32_t canCount = 0;
+volatile uint32_t canUnhandledCount = 0;
 volatile float sensorHubMph = 0.0;
 
 volatile st_cmd_t canMsg;
 
 typedef struct {
   int16_t id;
-  unsigned long counter;
+  uint32_t counter;
   uint8_t* data;
 } canData;
 
@@ -157,7 +157,7 @@ bool previousShiftLight = false;
 
 bool currentButtonValue = 1;
 bool previousButtonValue = 1;
-unsigned long buttonMillis = 0;
+uint32_t buttonMillis = 0;
 
 // WARMUP VARIABLES ////////////////////////////////////////////////////////////
 
@@ -166,20 +166,19 @@ float startupCLT = STARTUP_CLT_VALUE;
 
 // LOOP TIMER VARIABLES ////////////////////////////////////////////////////////
 
-unsigned long currentMillis = 0;
-unsigned long previousMillis = 0;
-unsigned long startPolling = 0;
-unsigned long endPolling = 0;
-unsigned int pollCount = 0;
-unsigned int maxPollingDelay = 0;
-unsigned int pollingDelayLimit = 10;
+uint32_t currentMillis = 0;
+uint32_t previousMillis = 0;
+uint32_t startPolling = 0;
+uint32_t endPolling = 0;
+uint16_t pollCount = 0;
+uint16_t maxPollingDelay = 0;
+uint16_t pollingDelayLimit = 10;
 uint8_t displayInterval = 100;
-unsigned long lastDisplayMillis = 0;
-unsigned int diagnosticInterval = 5000;
-unsigned long lastDiagnosticMillis = 0;
+uint32_t lastDisplayMillis = 0;
+uint16_t diagnosticInterval = 5000;
+uint32_t lastDiagnosticMillis = 0;
 
-uint8_t clickBuzzerInterval = 2;
-uint32_t clickBuzzerStartMillis = 0;
+uint8_t clickBuzzerInterval = 1;
 
 uint8_t shortBuzzerInterval = 25;
 uint32_t shortBuzzerStartMillis = 0;
@@ -205,7 +204,7 @@ struct Display
   EngineVariable* gauge2;
 };
 
-const uint8_t DISPLAY_COUNT = 17;
+const uint8_t DISPLAY_COUNT = 18;
 uint8_t currentDisplayIndex = 0;
 Display* allDisplays[DISPLAY_COUNT];
 Display display_warmup    = {warmup, NULL, NULL};
@@ -225,6 +224,7 @@ Display display_adv       = {single, &engine_adv, NULL};
 Display display_tps       = {single, &engine_tps, NULL};
 Display display_pw1       = {single, &engine_pw1, NULL};
 Display display_060       = {zerotosixty, NULL, NULL};
+Display display_14m       = {quartermile, NULL, NULL};
 
 bool inError = false;
 
@@ -442,6 +442,7 @@ void setup() {
   allDisplays[14] = &display_tps;
   allDisplays[15] = &display_pw1;
   allDisplays[16] = &display_060;
+  allDisplays[17] = &display_14m;
 
   #pragma endregion
 
@@ -517,7 +518,6 @@ void loop() {
   Display* d = allDisplays[currentDisplayIndex];
 
   //calculate 0-60
-
   if(d->type == zerotosixty)
   {
     if(perfStartMillis == 0 && engine_vss.currentValue > 0.0 && engine_vss.previousValue == 0.0)
@@ -534,7 +534,10 @@ void loop() {
     ztsElapsedMillis = millis() - perfStartMillis;
   }
 
+  if(d->type == quartermile)
+  {
 
+  }
 
 
   if(DEBUG)
@@ -650,12 +653,6 @@ void loop() {
     shortBuzzerStartMillis = 0;
   }
 
-  if(currentMillis - clickBuzzerStartMillis >= clickBuzzerInterval && clickBuzzerStartMillis > 0)
-  {
-    digitalWrite(BUZZER_PIN, LOW);
-    clickBuzzerStartMillis = 0;
-  }
-
   //draw display
   if(true) {
     if(currentMillis - lastDisplayMillis >= displayInterval && currentMillis > 500) {
@@ -692,12 +689,13 @@ void startShortBuzzer()
 void startClickBuzzer()
 {
   digitalWrite(BUZZER_PIN, HIGH);
-  clickBuzzerStartMillis = millis();
+  delay(1);
+  digitalWrite(BUZZER_PIN, LOW);
 }
 
-char* formatRuntime(unsigned long milliseconds)
+char* formatRuntime(uint32_t milliseconds)
 {
-  unsigned long seconds = milliseconds / 1000;
+  uint32_t seconds = milliseconds / 1000;
   int runHours = seconds / 3600;
   int secsRemaining = seconds % 3600;
   int runMinutes = secsRemaining / 60;
@@ -776,6 +774,10 @@ void drawDisplay()
   else if(d->type == zerotosixty)
   {
     drawZeroToSixty();
+  }
+  else if(d->type == quartermile)
+  {
+    drawQuarterMile();
   }
 }
 
@@ -882,8 +884,6 @@ void drawZeroToSixty()
   lcd.setCursor(0, 0);
   lcd.print("0-60 ");
 
-
-
   char vssBuffer[2];
   sprintf(vssBuffer,"%02d",(uint16_t)engine_vss.currentValue);
   lcd.print(vssBuffer);
@@ -917,6 +917,12 @@ void drawZeroToSixty()
       drawBar(0.0, 60.0, engine_vss.currentValue, 1, 0, 16);
     }
   }
+}
+
+void drawQuarterMile()
+{
+  lcd.setCursor(0, 0);
+  lcd.print("1/4mi");
 }
 
 void processCanMessages()
@@ -1229,8 +1235,8 @@ void drawBar(float lowValue, float highValue, float currentValue, int row, int c
 
 bool calculateErrorLight() {
   uint8_t len = 20; //sizeof(allGauges);
-  unsigned long badCount;
-  unsigned long totalCount;
+  uint32_t badCount;
+  uint32_t totalCount;
   uint8_t percent;
   bool inError = false;
   
