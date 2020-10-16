@@ -252,12 +252,45 @@ void clearBuf(volatile uint8_t* Buffer){
   }
 }
 
-// 0-60 variables //////////////////////////////////////////////////////////////
+// perf variables //////////////////////////////////////////////////////////////
 
+bool perfActive = false;
 uint32_t perfStartMillis = 0;
 uint32_t perfEndMillis = 0;
 uint32_t ztsElapsedMillis = 0;
-bool perfActive = false;
+
+uint32_t perfStartPulses = 0;
+uint32_t perfEndPulses = 0;
+uint16_t perfElapsedPulses = 0;
+uint16_t perfQuarterMilePulses = VSS_PULSE_PER_MILE / 4;
+
+typedef struct
+{
+  bool isActive;
+  uint32_t startMillis;
+  uint32_t endMillis;
+  uint32_t elapsedMillis;
+  float mph;
+  uint32_t startPulses;
+  uint32_t endPulses;
+  uint16_t elapsedPulses;
+} PerformanceTracker;
+
+PerformanceTracker tracker060; //0-60 time
+PerformanceTracker tracker600; //60-0 time
+PerformanceTracker tracker14;  //quarter mile time and speed
+
+// void resetPerformanceTracker(PerformanceTracker* t)
+// {
+//   t->isActive = false;
+//   t->startMillis = 0;
+//   t->endMillis = 0;
+//   t->elapsedMillis = 0;
+//   t->mph = 0.0;
+//   t->startPulses = 0;
+//   t->endPulses = 0;
+//   t->elapsedPulses = 0;
+// }
 
 ISR(CANIT_vect) {
   canCount++;
@@ -507,6 +540,32 @@ void setup() {
   //datasheet section 7.3 Watchdog Timer
   //enable watchdog timer (WDCE, WDE) and set timing (WDP0, WDP1)
   //WDTCR = (1<<WDCE) | (1<<WDE) | (1 << WDP0) | (1 << WDP1);
+
+  currentDisplayIndex = 17;
+
+
+
+  //resetPerformanceTracker(tracker060);
+
+  tracker14.isActive = false;
+  tracker14.startMillis = 0;
+  tracker14.endMillis = 0;
+  tracker14.elapsedMillis = 0;
+  tracker14.mph = 0.0;
+  tracker14.startPulses = 0;
+  tracker14.endPulses = 0;
+  tracker14.elapsedPulses = 0;
+//   t->isActive = false;
+//   t->startMillis = 0;
+//   t->endMillis = 0;
+//   t->elapsedMillis = 0;
+//   t->mph = 0.0;
+//   t->startPulses = 0;
+//   t->endPulses = 0;
+//   t->elapsedPulses = 0;
+
+
+
 }
 
 bool canCheckComplete = false;
@@ -537,6 +596,33 @@ void loop() {
   if(d->type == quartermile)
   {
 
+    if(tracker14.isActive)
+    {
+      tracker14.elapsedMillis = millis() - tracker14.startMillis;
+      tracker14.elapsedPulses = vssPulseSafe - tracker14.startPulses;
+    }
+
+    //get started
+    if(tracker14.startMillis == 0 && engine_vss.currentValue > 0.0 && engine_vss.previousValue == 0.0)
+    {
+      tracker14.elapsedMillis = 0;
+      tracker14.startMillis = millis();
+      tracker14.startPulses = vssPulseSafe;
+      tracker14.isActive = true;
+      //calculate 1/4 mile time
+    }
+
+    //finish
+    if(tracker14.isActive && tracker14.elapsedPulses >= (VSS_PULSE_PER_MILE / 4))
+    {
+      tracker14.endMillis = millis();
+      tracker14.isActive = false;
+      startShortBuzzer();
+    }
+
+
+    
+    
   }
 
 
@@ -914,6 +1000,27 @@ void drawQuarterMile()
 {
   lcd.setCursor(0, 0);
   lcd.print("1/4mi");
+
+  lcd.setCursor(6, 0);
+
+
+
+  double elapsedSeconds = (double)tracker14.elapsedMillis / 1000.0;
+  lcd.print(elapsedSeconds,1);
+  lcd.print(" @ ");
+
+  char vssBuffer[3];
+  sprintf(vssBuffer,"%03d",round(engine_vss.currentValue));
+  lcd.print(vssBuffer);
+
+
+  drawBar(0, (VSS_PULSE_PER_MILE / 4), tracker14.elapsedPulses, 1, 0, 16);
+
+
+  //lcd.print("12.2@120");
+
+  //tracker14;
+
 }
 
 void processCanMessages()
