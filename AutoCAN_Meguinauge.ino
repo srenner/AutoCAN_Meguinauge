@@ -1005,6 +1005,10 @@ void drawQuarterMile()
 
   lcd.setCursor(6, 0);
 
+  if(tracker14.isActive && engine_vss.currentValue == 0.0 && tracker14.elapsedMillis > 2000)
+  {
+    tracker14.isActive = false;
+  }
 
 
   double elapsedSeconds = (double)tracker14.elapsedMillis / 1000.0;
@@ -1028,6 +1032,9 @@ void drawQuarterMile()
       tracker14.elapsedMillis = 0;
       tracker14.endMillis = 0;
       tracker14.mph = 0;
+      tracker14.startPulses = 0;
+      tracker14.endPulses = 0;
+      tracker14.elapsedPulses = 0;
       lcd.setCursor(0,1);
       lcd.print("READY!          ");
     }
