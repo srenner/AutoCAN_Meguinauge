@@ -204,7 +204,7 @@ struct Display
   EngineVariable* gauge2;
 };
 
-const uint8_t DISPLAY_COUNT = 18;
+const uint8_t DISPLAY_COUNT = 19;
 uint8_t currentDisplayIndex = 0;
 Display* allDisplays[DISPLAY_COUNT];
 Display display_warmup    = {warmup, NULL, NULL};
@@ -225,6 +225,7 @@ Display display_tps       = {single, &engine_tps, NULL};
 Display display_pw1       = {single, &engine_pw1, NULL};
 Display display_060       = {zerotosixty, NULL, NULL};
 Display display_14m       = {quartermile, NULL, NULL};
+Display display_600       = {sixtytozero, NULL, NULL};
 
 bool inError = false;
 
@@ -476,6 +477,7 @@ void setup() {
   allDisplays[15] = &display_pw1;
   allDisplays[16] = &display_060;
   allDisplays[17] = &display_14m;
+  allDisplays[18] = &display_600;
 
   #pragma endregion
 
@@ -589,13 +591,11 @@ void loop() {
   //calculate 0-60
   if(d->type == zerotosixty)
   {
-
     if(tracker060.isActive)
     {
       tracker060.elapsedMillis = millis() - tracker060.startMillis;
       tracker060.mph = engine_vss.currentValue;     
     }
-
     if(tracker060.startMillis == 0 && engine_vss.currentValue > 0.0 && engine_vss.previousValue == 0.0)
     {
       tracker060.startMillis = millis();
@@ -609,8 +609,30 @@ void loop() {
       tracker060.mph = engine_vss.currentValue;
       startShortBuzzer();
     }
-
   }
+
+  if(d->type == sixtytozero)
+  {
+    tracker600.mph = engine_vss.currentValue;
+
+    if(tracker600.isActive)
+    {
+      tracker600.elapsedMillis = millis() - tracker600.startMillis;
+    }
+    if(tracker600.startMillis == 0 && engine_vss.currentValue < 60.0 && engine_vss.previousValue >= 60.0)
+    {
+      tracker600.startMillis = millis();
+      tracker600.isActive = true;
+    }
+    if(tracker600.isActive && engine_vss.currentValue == 0.0)
+    {
+      tracker600.endMillis = millis();
+      tracker600.isActive = false;
+      startShortBuzzer();
+    }
+  }
+
+
 
   if(d->type == quartermile)
   {
@@ -877,6 +899,10 @@ void drawDisplay()
   {
     drawQuarterMile();
   }
+  else if(d->type == sixtytozero)
+  {
+    drawSixtyToZero();
+  }
 }
 
 void drawWarmup()
@@ -983,7 +1009,7 @@ void drawZeroToSixty()
   lcd.print("0-60 ");
 
 
-  if(tracker060.isActive && tracker060.mph == 0.0 && tracker14.elapsedMillis > 2000)
+  if(tracker060.isActive && tracker060.mph == 0.0 && tracker060.elapsedMillis > 2000)
   {
     tracker060.isActive = false;
   }
@@ -1077,6 +1103,66 @@ void drawQuarterMile()
       lcd.setCursor(0,1);
       lcd.print("READY!          ");
     }
+  }
+}
+
+void drawSixtyToZero()
+{
+  lcd.setCursor(0, 0);
+  lcd.print("60-0 ");
+
+  if(tracker600.isActive && tracker600.mph >= 60.0)
+  {
+    tracker600.isActive = false;
+  }
+
+
+  char vssBuffer[2];
+  sprintf(vssBuffer,"%02d",(uint16_t)tracker600.mph);
+  lcd.print(vssBuffer);
+
+  lcd.print("mph");
+
+  if(tracker600.mph >= 60.0)
+  {
+    tracker600.startMillis = 0;
+    tracker600.elapsedMillis = 0;
+    tracker600.endMillis = 0;
+    tracker600.isActive = false;
+    lcd.setCursor(0,1);
+    lcd.print("READY!          ");
+
+    lcd.setCursor(11, 0);
+    lcd.print("     ");
+
+  }
+  else 
+  {
+    if(tracker600.isActive)
+    {
+      lcd.setCursor(11, 0);
+
+      double elapsedSeconds = (double)tracker600.elapsedMillis / 1000.0;
+      sprintf(vssBuffer,"%02d",(uint16_t)engine_vss.currentValue);
+      lcd.print(elapsedSeconds,1);
+      drawBar(60.0, 0.0, engine_vss.currentValue, 1, 0, 16);
+    }
+    else
+    {
+      if(engine_vss.currentValue >= 60.0)
+      {
+        tracker600.startMillis = 0;
+        tracker600.elapsedMillis = 0;
+        tracker600.endMillis = 0;
+        tracker600.mph = 0;
+        tracker600.startPulses = 0;
+        tracker600.endPulses = 0;
+        tracker600.elapsedPulses = 0;
+        // lcd.setCursor(0,1);
+        // lcd.print("READY!          ");
+      }
+    }
+
   }
 }
 
