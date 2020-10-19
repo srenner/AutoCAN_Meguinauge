@@ -53,9 +53,9 @@ Each row contains the engine parameter short code, value, and half-width bar gra
 ## Display List
 
 * Warmup
-* Runtime/Distance
-* AFR/TGT
+* Runtime/Distance/etc
 * CLT/IAT
+* AFR/TGT
 * AFR/MAP
 * AFR/EGO
 * VSS/RPM
@@ -68,6 +68,8 @@ Each row contains the engine parameter short code, value, and half-width bar gra
 * ADV
 * TPS
 * PW1
+* 0-60 performance calculator
+* 1/4 mile performance calculator
 
 ## MegaSquirt details
 * Tested using MegaSquirt-3 with firmware version 1.5.1. Intermittent loss of CAN messages can sometimes be fixed by re-flashing or upgrading the MegaSquirt firmware.
