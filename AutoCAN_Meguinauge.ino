@@ -600,6 +600,7 @@ void loop() {
     {
       tracker14.elapsedMillis = millis() - tracker14.startMillis;
       tracker14.elapsedPulses = vssPulseSafe - tracker14.startPulses;
+      tracker14.mph = engine_vss.currentValue;
     }
 
     //get started
@@ -616,6 +617,7 @@ void loop() {
     if(tracker14.isActive && tracker14.elapsedPulses >= (VSS_PULSE_PER_MILE / 4))
     {
       tracker14.endMillis = millis();
+      tracker14.mph = engine_vss.currentValue;
       tracker14.isActive = false;
       startShortBuzzer();
     }
@@ -1010,17 +1012,26 @@ void drawQuarterMile()
   lcd.print(" @ ");
 
   char vssBuffer[3];
-  sprintf(vssBuffer,"%03d",round(engine_vss.currentValue));
+  sprintf(vssBuffer,"%03d",round(tracker14.mph));
   lcd.print(vssBuffer);
+  lcd.print(" ");
 
-
-  drawBar(0, (VSS_PULSE_PER_MILE / 4), tracker14.elapsedPulses, 1, 0, 16);
-
-
-  //lcd.print("12.2@120");
-
-  //tracker14;
-
+  if(tracker14.isActive)
+  {
+    drawBar(0, (VSS_PULSE_PER_MILE / 4), tracker14.elapsedPulses, 1, 0, 16);
+  }
+  else
+  {
+    if(engine_vss.currentValue == 0.0)
+    {
+      tracker14.startMillis = 0;
+      tracker14.elapsedMillis = 0;
+      tracker14.endMillis = 0;
+      tracker14.mph = 0;
+      lcd.setCursor(0,1);
+      lcd.print("READY!          ");
+    }
+  }
 }
 
 void processCanMessages()
