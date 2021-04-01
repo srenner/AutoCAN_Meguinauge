@@ -15,7 +15,6 @@
 * 1 pushbutton
 
 ## External Libraries
-* ~~[AltSoftSerial](https://github.com/Atlantis-Specialist-Technologies/AltSoftSerial) - Make sure to use the version modified by AST to work with the AST-CAN485 dev board.~~
 * [AutoCAN](https://github.com/srenner/AutoCAN) - Common library for all AutoCAN projects
 
 ## User Interface
@@ -72,5 +71,5 @@ Each row contains the engine parameter short code, value, and half-width bar gra
 * 1/4 mile performance calculator
 
 ## MegaSquirt details
-* Tested using MegaSquirt-3 with firmware version 1.5.1. Intermittent loss of CAN messages can sometimes be fixed by re-flashing or upgrading the MegaSquirt firmware.
+* Tested using MegaSquirt-3 with firmware version 1.5.1.
 * Uses MegaSquirt's "Simplified Dash Broadcasting" as described in [this PDF](http://www.msextra.com/doc/pdf/Megasquirt_CAN_Broadcast.pdf).
